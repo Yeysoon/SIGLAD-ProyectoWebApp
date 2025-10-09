@@ -5,19 +5,26 @@ const saltRounds = 10; // Para hashear contraseñas
 
 const Usuario = {
     /**
-     * Busca un usuario por su nombre de usuario para el login (CU-01).
+     * Busca un usuario por su CORREO para el login (CU-01).
+     * El parámetro 'loginValue' es el correo que el usuario intenta usar.
      */
-    findByUsername: async (usuario) => {
-        const text = 'SELECT id_usuario, usuario, password_hash, rol, estado FROM siglad.usuarios WHERE usuario = $1';
-        const { rows } = await db.query(text, [usuario]);
+    findByUsername: async (loginValue) => {
+        const text = `
+            SELECT id_usuario, nombre, correo, password_hash, rol, estado 
+            FROM siglad.usuarios 
+            WHERE correo = $1
+        `;
+        const { rows } = await db.query(text, [loginValue]);
         if (!rows.length) return null;
-        // Mapear password_hash a password para el controller
+        
+        // El controller espera estos campos para validar el login y generar el token
         return {
-            id_usuario: rows[0].id_usuario,
-            usuario: rows[0].usuario,
+            id: rows[0].id_usuario, // Usamos 'id' para que el payload JWT sea más limpio
+            usuario: rows[0].correo, // Usamos el correo como nombre de usuario para el token
             password_hash: rows[0].password_hash,
             rol: rows[0].rol,
             estado: rows[0].estado,
+            nombre: rows[0].nombre // Incluimos el nombre para el objeto de respuesta
         };
     },
 
@@ -25,7 +32,8 @@ const Usuario = {
      * Lista todos los usuarios (CU-02).
      */
     findAll: async () => {
-        const text = 'SELECT id_usuario, nombre, usuario, rol, estado, fecha_creacion FROM siglad.usuarios ORDER BY nombre ASC';
+        // Se selecciona 'correo' en lugar de 'usuario'
+        const text = 'SELECT id_usuario, nombre, correo, rol, estado, fecha_creacion FROM siglad.usuarios ORDER BY nombre ASC';
         const { rows } = await db.query(text);
         return rows;
     },
@@ -36,11 +44,12 @@ const Usuario = {
     create: async (data) => {
         const hash = await bcrypt.hash(data.password, saltRounds);
         const text = `
-            INSERT INTO siglad.usuarios (nombre, usuario, password_hash, rol, estado)
+            INSERT INTO siglad.usuarios (nombre, correo, password_hash, rol, estado)
             VALUES ($1, $2, $3, $4, $5)
-            RETURNING id_usuario, usuario, rol, estado, fecha_creacion
+            RETURNING id_usuario, nombre, correo, rol, estado, fecha_creacion
         `;
-        const values = [data.nombre, data.usuario, hash, data.rol, data.estado || 'ACTIVO'];
+        // data.usuario fue reemplazado por data.correo en el array de values
+        const values = [data.nombre, data.correo, hash, data.rol, data.estado || 'ACTIVO'];
         const { rows } = await db.query(text, values);
         return rows[0];
     },
@@ -50,14 +59,14 @@ const Usuario = {
      */
     update: async (idUsuario, data) => {
         let hash = null;
-        let text = 'UPDATE siglad.usuarios SET nombre = $1, usuario = $2, rol = $3, estado = $4 WHERE id_usuario = $5 RETURNING id_usuario';
-        let values = [data.nombre, data.usuario, data.rol, data.estado, idUsuario];
+        let text = 'UPDATE siglad.usuarios SET nombre = $1, correo = $2, rol = $3, estado = $4 WHERE id_usuario = $5 RETURNING id_usuario';
+        let values = [data.nombre, data.correo, data.rol, data.estado, idUsuario];
 
         if (data.password) {
-            // Si se proporciona una nueva contraseña, la hasheamos
             hash = await bcrypt.hash(data.password, saltRounds);
-            text = 'UPDATE siglad.usuarios SET nombre = $1, usuario = $2, password_hash = $3, rol = $4, estado = $5 WHERE id_usuario = $6 RETURNING id_usuario';
-            values = [data.nombre, data.usuario, hash, data.rol, data.estado, idUsuario];
+            // Si hay contraseña, se agrega el password_hash a la consulta
+            text = 'UPDATE siglad.usuarios SET nombre = $1, correo = $2, password_hash = $3, rol = $4, estado = $5 WHERE id_usuario = $6 RETURNING id_usuario';
+            values = [data.nombre, data.correo, hash, data.rol, data.estado, idUsuario];
         }
 
         const { rows } = await db.query(text, values);
