@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Usuarios - SIGLAD</title>
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <link rel="stylesheet" href="../assets/css/dashboard.css">
+</head>
+<body>
+    <header id="navbar-container"></header>
+    <div class="main-content">
+        <aside id="sidebar-container"></aside>
+        
+        <main class="dashboard">
+            <h1>Gestión de Usuarios</h1>
+            <div class="actions">
+                <button id="add-user-btn" class="btn-primary">+ Crear Nuevo Usuario</button>
+            </div>
+
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Usuario</th>
+                        <th>Rol</th>
+                        <th>Estado</th>
+                        <th>Creado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="users-table-body">
+                    </tbody>
+            </table>
+
+            <div id="user-modal" class="modal hidden">
+                <div class="modal-content">
+                    <span class="close-btn">&times;</span>
+                    <h2 id="modal-title">Crear Nuevo Usuario</h2>
+                    <form id="user-form">
+                        <input type="hidden" id="user-id">
+                        <div id="modal-alert" class="alert error hidden"></div>
+                        <div class="form-group"><label for="nombre">Nombre</label><input type="text" id="nombre" required></div>
+                        <div class="form-group"><label for="apellido">Apellido</label><input type="text" id="apellido" required></div>
+                        <div class="form-group"><label for="usuario">Usuario</label><input type="text" id="usuario" required></div>
+                        <div class="form-group password-group"><label for="password">Contraseña</label><input type="password" id="password" required></div>
+                        <div class="form-group">
+                            <label for="rol">Rol</label>
+                            <select id="rol" required>
+                                <option value="ADMINISTRADOR">ADMINISTRADOR</option>
+                                <option value="TRANSPORTISTA">TRANSPORTISTA</option>
+                                <option value="AGENTE_ADUANERO">AGENTE ADUANERO</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="estado">Estado</label>
+                            <select id="estado" required>
+                                <option value="ACTIVO">ACTIVO</option>
+                                <option value="INACTIVO">INACTIVO</option>
+                            </select>
+                        </div>
+                        <button type="submit" id="save-user-btn" class="btn-primary">Guardar</button>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script type="module" src="../assets/js/utils/auth-check.js"></script>
+    <script type="module" src="../assets/js/components/navbar.js"></script>
+    <script type="module" src="../assets/js/components/sidebar.js"></script>
+    <script type="module" src="../assets/js/services/api.service.js"></script>
+    <script type="module" src="../assets/js/pages/usuarios.js"></script>
+</body>
+</html>

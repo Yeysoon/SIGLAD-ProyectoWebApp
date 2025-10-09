@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administrador - SIGLAD</title>
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <link rel="stylesheet" href="../assets/css/dashboard.css">
+</head>
+<body>
+    <header id="navbar-container"></header>
+
+    <div class="main-content">
+        <aside id="sidebar-container"></aside>
+        
+        <main class="dashboard">
+            <h1>Panel de Administración</h1>
+            <section class="quick-stats">
+                <div class="stat-card"><h2>Total Usuarios</h2><p id="total-users">0</p></div>
+                <div class="stat-card"><h2>Declaraciones Pendientes</h2><p>45</p></div>
+                <div class="stat-card"><h2>Bitácora Reciente</h2><p>Ver Log</p></div>
+            </section>
+
+            <section class="section-users">
+                <h2>Gestión de Usuarios</h2>
+                <button class="btn-primary" onclick="window.location.href='./usuarios.html'">Gestionar Usuarios</button>
+            </section>
+        </main>
+    </div>
+
+    <script type="module" src="../assets/js/utils/auth-check.js"></script>
+    <script type="module" src="../assets/js/components/navbar.js"></script>
+    <script type="module" src="../assets/js/components/sidebar.js"></script>
+    <script type="module" src="../assets/js/pages/dashboard-admin.js"></script>
+</body>
+</html>

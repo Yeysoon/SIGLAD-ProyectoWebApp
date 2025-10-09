@@ -1,0 +1,140 @@
+/* frontend/assets/css/dashboard.css */
+
+/* --- Layout Principal --- */
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 30px;
+    background-color: var(--primary-color);
+    color: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.main-content {
+    display: flex;
+}
+
+#sidebar-container {
+    width: 250px;
+    background-color: #343a40;
+    color: white;
+    min-height: calc(100vh - 60px); /* Ajustar a la altura del viewport menos la altura del navbar */
+    padding: 20px;
+}
+
+.dashboard {
+    flex-grow: 1;
+    padding: 30px;
+}
+
+/* --- Estadísticas (Admin Dashboard) --- */
+.quick-stats {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 40px;
+}
+
+.stat-card {
+    background-color: white;
+    padding: 20px;
+    border-radius: var(--border-radius);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    flex: 1;
+    text-align: center;
+}
+
+/* --- Tablas --- */
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    background-color: white;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.data-table th, .data-table td {
+    border: 1px solid #ddd;
+    padding: 12px 15px;
+    text-align: left;
+}
+
+.data-table th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+}
+
+.data-table tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+/* --- Botones de Acción --- */
+.actions {
+    margin-bottom: 20px;
+}
+
+.btn-action {
+    padding: 5px 10px;
+    margin-right: 5px;
+    font-size: 0.9em;
+    width: auto;
+}
+
+/* --- Status Badges --- */
+.status {
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 0.8em;
+    font-weight: bold;
+    color: white;
+}
+
+.status.activo { background-color: #28a745; }
+.status.inactivo { background-color: #6c757d; }
+.status.pendiente { background-color: #ffc107; color: #333;}
+
+/* --- Modal --- */
+.modal {
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.4);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background-color: #fefefe;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    width: 90%;
+    max-width: 500px;
+    position: relative;
+}
+
+.close-btn {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close-btn:hover,
+.close-btn:focus {
+    color: #000;
+    text-decoration: none;
+    cursor: pointer;
+}
