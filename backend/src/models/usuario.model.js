@@ -1,87 +1,109 @@
 // backend/src/models/usuario.model.js
 const db = require('../config/database');
 const bcrypt = require('bcrypt');
-const saltRounds = 10; // Para hashear contraseñas
+const SALT_ROUNDS = 10; 
 
-const Usuario = {
-    /**
-     * Busca un usuario por su CORREO para el login (CU-01).
-     * El parámetro 'loginValue' es el correo que el usuario intenta usar.
-     */
-    findByUsername: async (loginValue) => {
+const UsuarioModel = {
+    // CU-01: Buscar usuario por nombre/correo para login
+    findByUsername: async (usuario) => {
         const text = `
-            SELECT id_usuario, nombre, correo, password_hash, rol, estado 
+            SELECT id_usuario as id, nombre, correo, password_hash, rol::text, estado::text
             FROM siglad.usuarios 
             WHERE correo = $1
         `;
-        const { rows } = await db.query(text, [loginValue]);
-        if (!rows.length) return null;
-        
-        // El controller espera estos campos para validar el login y generar el token
-        return {
-            id: rows[0].id_usuario, // Usamos 'id' para que el payload JWT sea más limpio
-            usuario: rows[0].correo, // Usamos el correo como nombre de usuario para el token
-            password_hash: rows[0].password_hash,
-            rol: rows[0].rol,
-            estado: rows[0].estado,
-            nombre: rows[0].nombre // Incluimos el nombre para el objeto de respuesta
-        };
+        const { rows } = await db.query(text, [usuario]);
+        return rows[0];
     },
 
-    /**
-     * Lista todos los usuarios (CU-02).
-     */
+    // CU-02: Listar todos los usuarios
     findAll: async () => {
-        // Se selecciona 'correo' en lugar de 'usuario'
-        const text = 'SELECT id_usuario, nombre, correo, rol, estado, fecha_creacion FROM siglad.usuarios ORDER BY nombre ASC';
+        const text = `
+            SELECT id_usuario as id, nombre, correo, rol::text, estado::text, fecha_creacion
+            FROM siglad.usuarios
+            ORDER BY id_usuario ASC
+        `;
         const { rows } = await db.query(text);
         return rows;
     },
 
-    /**
-     * Crea un nuevo usuario (CU-02).
-     */
-    create: async (data) => {
-        const hash = await bcrypt.hash(data.password, saltRounds);
+    // CU-02: Buscar usuario por ID
+    findById: async (id) => {
+        const text = `
+            SELECT id_usuario as id, nombre, correo, rol::text, estado::text, fecha_creacion
+            FROM siglad.usuarios 
+            WHERE id_usuario = $1
+        `;
+        const { rows } = await db.query(text, [id]);
+        return rows[0];
+    },
+
+    // CU-02: Crear nuevo usuario (usado por Admin)
+    create: async ({ nombre, correo, password, rol, estado }) => {
+        const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
+        
+        // El rol y el estado deben coincidir con los ENUMs de PostgreSQL
         const text = `
             INSERT INTO siglad.usuarios (nombre, correo, password_hash, rol, estado)
-            VALUES ($1, $2, $3, $4, $5)
-            RETURNING id_usuario, nombre, correo, rol, estado, fecha_creacion
+            VALUES ($1, $2, $3, $4::siglad.rol_usuario, $5::siglad.estado_usuario)
+            RETURNING id_usuario as id, nombre, correo, rol::text, estado::text
         `;
-        // data.usuario fue reemplazado por data.correo en el array de values
-        const values = [data.nombre, data.correo, hash, data.rol, data.estado || 'ACTIVO'];
+        const values = [nombre, correo, passwordHash, rol, estado];
+        
+        try {
+            const { rows } = await db.query(text, values);
+            return rows[0];
+        } catch (error) {
+            // Manejar error de correo duplicado (PostgreSQL code 23505)
+            if (error.code === '23505') {
+                throw new Error('El correo electrónico ya está registrado.');
+            }
+            throw error;
+        }
+    },
+
+    // CU-02: Actualizar usuario
+    update: async (id, data) => {
+        const updates = [];
+        const values = [];
+        let paramCount = 1;
+
+        if (data.nombre) { updates.push(`nombre = $${paramCount++}`); values.push(data.nombre); }
+        if (data.correo) { updates.push(`correo = $${paramCount++}`); values.push(data.correo); }
+        if (data.rol) { updates.push(`rol = $${paramCount++}::siglad.rol_usuario`); values.push(data.rol); }
+        if (data.estado) { updates.push(`estado = $${paramCount++}::siglad.estado_usuario`); values.push(data.estado); }
+        
+        if (data.password) {
+            const passwordHash = await bcrypt.hash(data.password, SALT_ROUNDS);
+            updates.push(`password_hash = $${paramCount++}`);
+            values.push(passwordHash);
+        }
+
+        if (updates.length === 0) {
+            return null; // Nada que actualizar
+        }
+
+        values.push(id);
+        const text = `
+            UPDATE siglad.usuarios
+            SET ${updates.join(', ')}
+            WHERE id_usuario = $${paramCount}
+            RETURNING id_usuario as id, nombre, correo, rol::text, estado::text
+        `;
+
         const { rows } = await db.query(text, values);
         return rows[0];
     },
 
-    /**
-     * Actualiza un usuario existente (CU-02).
-     */
-    update: async (idUsuario, data) => {
-        let hash = null;
-        let text = 'UPDATE siglad.usuarios SET nombre = $1, correo = $2, rol = $3, estado = $4 WHERE id_usuario = $5 RETURNING id_usuario';
-        let values = [data.nombre, data.correo, data.rol, data.estado, idUsuario];
-
-        if (data.password) {
-            hash = await bcrypt.hash(data.password, saltRounds);
-            // Si hay contraseña, se agrega el password_hash a la consulta
-            text = 'UPDATE siglad.usuarios SET nombre = $1, correo = $2, password_hash = $3, rol = $4, estado = $5 WHERE id_usuario = $6 RETURNING id_usuario';
-            values = [data.nombre, data.correo, hash, data.rol, data.estado, idUsuario];
-        }
-
-        const { rows } = await db.query(text, values);
-        return rows.length > 0;
-    },
-
-    /**
-     * Elimina/Inactiva un usuario (CU-02).
-     */
-    remove: async (idUsuario) => {
-        // En lugar de DELETE, actualizamos el estado a INACTIVO
-        const text = 'UPDATE siglad.usuarios SET estado = \'INACTIVO\' WHERE id_usuario = $1 RETURNING id_usuario';
-        const { rows } = await db.query(text, [idUsuario]);
-        return rows.length > 0;
+    // CU-02: Eliminar usuario
+    remove: async (id) => {
+        const text = `
+            DELETE FROM siglad.usuarios 
+            WHERE id_usuario = $1
+            RETURNING id_usuario
+        `;
+        const { rows } = await db.query(text, [id]);
+        return rows[0];
     }
 };
 
-module.exports = Usuario;
+module.exports = UsuarioModel;
