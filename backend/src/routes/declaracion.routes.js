@@ -5,17 +5,33 @@ const declaracionController = require('../controllers/declaracion.controller');
 const { verifyToken } = require('../middleware/auth.middleware');
 const { hasRole } = require('../middleware/roles.middleware');
 
-// Rutas de Declaraciones solo para Transportista
+// Middleware de protección: Todas las rutas de declaraciones requieren token
 router.use(verifyToken);
-router.use(hasRole(['TRANSPORTISTA']));
 
-// POST /api/declaraciones - Registrar una nueva declaración
-router.post('/', declaracionController.createDeclaracion);
+// ==================================================
+// CU-03: Registro de Declaración (POST)
+// ==================================================
+router.post(
+    '/', 
+    hasRole(['TRANSPORTISTA']), // 🚨 Solo Transportista puede registrar
+    declaracionController.createDeclaracion
+);
 
-// GET /api/declaraciones - Listar las declaraciones del usuario
-router.get('/', declaracionController.listUserDeclaraciones);
+// ==================================================
+// CU-05: Consulta y Listado de Estado (GET)
+// ==================================================
+// Listar declaraciones propias (Transportista) o todas/pendientes (Agente)
+router.get(
+    '/', 
+    hasRole(['TRANSPORTISTA', 'AGENTE_ADUANERO']), 
+    declaracionController.listUserDeclaraciones
+);
 
-// GET /api/declaraciones/:id - Consultar una declaración específica
-router.get('/:id', declaracionController.getDeclaracion);
+// Consultar detalle de una declaración específica
+router.get(
+    '/:id', 
+    hasRole(['TRANSPORTISTA', 'AGENTE_ADUANERO']), 
+    declaracionController.getDeclaracion
+);
 
-module.exports = router; // 🚨 ¡CRÍTICO: Exportar el router!
+module.exports = router;

@@ -1,102 +1,91 @@
 // backend/src/controllers/usuario.controller.js
-const UsuarioModel = require('../models/usuario.model');
-const { check, validationResult } = require('express-validator');
-
-// Reglas de validación base
-const usuarioValidationRules = [
-    check('nombre').not().isEmpty().withMessage('El nombre es obligatorio.').isLength({ max: 100 }),
-    check('usuario').not().isEmpty().withMessage('El nombre de usuario es obligatorio.').isLength({ min: 4, max: 50 }),
-    check('rol').isIn(['ADMINISTRADOR', 'TRANSPORTISTA', 'AGENTE_ADUANERO']).withMessage('Rol inválido.'),
-    check('estado').optional().isIn(['ACTIVO', 'INACTIVO']).withMessage('Estado inválido.'),
-];
+const Usuario = require('../models/usuario.model');
+// Se recomienda usar express-validator para validar los datos, pero lo omitimos por ahora.
 
 /**
- * GET /api/usuarios - Listar usuarios (CU-02)
+ * GET /api/usuarios - Lista todos los usuarios (CU-02).
  */
 exports.listUsuarios = async (req, res, next) => {
     try {
-        const usuarios = await UsuarioModel.findAll();
-        // Ocultamos la contraseña y otros datos sensibles por seguridad
-        const safeUsuarios = usuarios.map(u => ({ 
-            id_usuario: u.id_usuario, 
-            nombre: u.nombre, 
-            usuario: u.usuario, 
-            rol: u.rol, 
-            estado: u.estado,
-            fecha_creacion: u.fecha_creacion
-        }));
-
-        res.json({ usuarios: safeUsuarios });
+        const usuarios = await Usuario.findAll();
+        res.json(usuarios);
     } catch (error) {
         next(error);
     }
 };
 
 /**
- * POST /api/usuarios - Crear nuevo usuario (CU-02)
+ * POST /api/usuarios - Crea un nuevo usuario (CU-02).
+ * Es vital para que el hash de la contraseña sea correcto.
  */
-exports.createUsuario = [
-    ...usuarioValidationRules,
-    check('password').isLength({ min: 6 }).withMessage('La contraseña debe tener al menos 6 caracteres.'),
-    async (req, res, next) => {
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(400).json({ errores: errors.array() });
+exports.createUsuario = async (req, res, next) => {
+    try {
+        // La validación de campos obligatorios (nombre, correo, password, rol)
+        // debe hacerse aquí con express-validator.
+        
+        const data = req.body;
+        
+        // 🚨 Importante: El modelo espera 'correo' y 'password' para hashear
+        if (!data.correo || !data.password || !data.nombre || !data.rol) {
+             return res.status(400).json({ msg: 'Faltan campos obligatorios para crear el usuario (nombre, correo, password, rol).' });
         }
+        
+        const nuevoUsuario = await Usuario.create(data);
 
-        try {
-            const nuevoUsuario = await UsuarioModel.create(req.body);
-            res.status(201).json({ 
-                msg: 'Usuario creado exitosamente.', 
-                data: { id: nuevoUsuario.id_usuario, usuario: nuevoUsuario.usuario }
-            });
-        } catch (error) {
-            // Manejo de error de usuario duplicado (ej. código 23505 en PostgreSQL)
-            if (error.code === '23505') {
-                 return res.status(409).json({ msg: 'El nombre de usuario o la cédula ya existen.' });
-            }
-            next(error);
+        // Limpiar la respuesta para no devolver el hash de la contraseña
+        const { password_hash, ...usuarioLimpio } = nuevoUsuario; 
+
+        res.status(201).json({ 
+            msg: 'Usuario creado exitosamente. Ya puedes iniciar sesión con este usuario.', 
+            usuario: usuarioLimpio 
+        });
+    } catch (error) {
+        // Manejar error de conflicto (ej. correo ya existe)
+        if (error.code === '23505') { 
+            return res.status(409).json({ msg: 'El correo electrónico ya está registrado.' });
         }
+        next(error); 
     }
-];
+};
 
 /**
- * PUT /api/usuarios/:id - Actualizar usuario (CU-02)
+ * PUT /api/usuarios/:id - Actualiza un usuario existente (CU-02).
  */
-exports.updateUsuario = [
-    ...usuarioValidationRules,
-    check('password').optional().isLength({ min: 6 }).withMessage('La contraseña debe tener al menos 6 caracteres si se va a cambiar.'),
-    async (req, res, next) => {
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(400).json({ errores: errors.array() });
-        }
+exports.updateUsuario = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const data = req.body;
+        
+        const actualizado = await Usuario.update(id, data);
 
-        try {
-            const result = await UsuarioModel.update(req.params.id, req.body);
-            if (!result) {
-                return res.status(404).json({ msg: 'Usuario no encontrado.' });
-            }
-            res.json({ msg: 'Usuario actualizado exitosamente.' });
-        } catch (error) {
-            if (error.code === '23505') {
-                 return res.status(409).json({ msg: 'El nombre de usuario ya existe.' });
-            }
-            next(error);
+        if (actualizado) {
+            res.json({ msg: `Usuario con ID ${id} actualizado correctamente.` });
+        } else {
+            res.status(404).json({ msg: 'Usuario no encontrado.' });
         }
+    } catch (error) {
+        if (error.code === '23505') { 
+            return res.status(409).json({ msg: 'El correo electrónico ya está registrado en otro usuario.' });
+        }
+        next(error);
     }
-];
+};
 
 /**
- * DELETE /api/usuarios/:id - Eliminar (inactivar) usuario (CU-02)
+ * DELETE /api/usuarios/:id - Elimina/Inactiva un usuario (CU-02).
  */
 exports.deleteUsuario = async (req, res, next) => {
     try {
-        const result = await UsuarioModel.remove(req.params.id);
-        if (!result) {
-            return res.status(404).json({ msg: 'Usuario no encontrado.' });
+        const { id } = req.params;
+        
+        // La lógica en el modelo lo marca como INACTIVO en lugar de eliminar
+        const inactivado = await Usuario.remove(id);
+
+        if (inactivado) {
+            res.json({ msg: `Usuario con ID ${id} inactivado correctamente.` });
+        } else {
+            res.status(404).json({ msg: 'Usuario no encontrado.' });
         }
-        res.json({ msg: 'Usuario inactivado (eliminado lógicamente) exitosamente.' });
     } catch (error) {
         next(error);
     }
