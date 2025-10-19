@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>Login SIGLAD</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" href="/favicon.ico">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+  <div class="container py-5">
+    <div class="row justify-content-center">
+      <div class="col-md-5">
+        <div class="card shadow-sm rounded-4">
+          <div class="card-body p-4">
+            <h1 class="h4 mb-1">Iniciar sesión</h1>
+            <p class="text-muted mb-4">Ingresa tus credenciales de SIGLAD.</p>
+            <form id="form">
+              <div class="mb-3">
+                <label class="form-label">Correo</label>
+                <input id="email" type="email" class="form-control" placeholder="admin@siglad.com.gt" required>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Contraseña</label>
+                <input id="password" type="password" class="form-control" placeholder="••••••••" required>
+              </div>
+              <button id="btn" type="submit" class="btn btn-primary w-100">Entrar</button>
+              <div id="msg" class="form-text text-danger mt-2"></div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/index.js" defer></script>
+</body>
+</html>
