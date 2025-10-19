@@ -1,97 +1,159 @@
 window.addEventListener('DOMContentLoaded', () => {
   const form = document.getElementById('form');
   const msg = document.getElementById('msg');
+  const btn = document.getElementById('btn');
+  const btnText = document.getElementById('btnText');
   
-  // Mapeo de roles a la página de inicio correspondiente
+  // Mapeo de roles a la página de inicio
   const roleRedirectMap = {
     'ADMIN': '/usuarios.html',
     'TRANSPORTISTA': '/duca.html',
-    'AGENTE': '/agente.html', // <-- Redirección directa para el Agente
+    'AGENTE': '/agente.html',
+    'IMPORTADOR': '/importador.html'
   };
   
-  // Página por defecto (Fallback) si el rol no está mapeado
-  const defaultPage = '/index.html'; 
+  const defaultPage = '/usuarios.html';
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    msg.textContent = '';
+    
+    // Limpiar mensaje anterior
+    limpiarMensaje();
+    
+    // Desabilitar botón
+    btn.disabled = true;
+    btnText.textContent = 'Procesando...';
 
     const email = document.getElementById('email').value.trim();
     const password = document.getElementById('password').value;
 
+    // Validaciones básicas
+    if (!email || !password) {
+      mostrarMensaje('Por favor completa todos los campos', 'warning');
+      btn.disabled = false;
+      btnText.textContent = 'Iniciar Sesión';
+      return;
+    }
+
     try {
+      console.log('Enviando login:', { email });
+      
       const res = await fetch('/api/auth/login', {
         method: 'POST',
-        headers: { 'Content-Type':'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
       });
-      const data = await res.json();
 
-      if (!res.ok || !data.ok) {
-        msg.textContent = data?.error || 'Usuario o contraseña incorrecta';
+      const data = await res.json();
+      console.log('Respuesta login:', { 
+        status: res.status, 
+        ok: data.ok, 
+        error: data.error
+      });
+
+      // [FA02] Usuario inactivo - Status 403
+      if (res.status === 403) {
+        mostrarMensaje('Usuario deshabilitado. Contacta al administrador.', 'error');
+        btn.disabled = false;
+        btnText.textContent = 'Iniciar Sesión';
         return;
       }
 
+      // [FA01] Credenciales inválidas - Status 401
+      if (res.status === 401) {
+        mostrarMensaje('Usuario o contraseña incorrecta', 'warning');
+        btn.disabled = false;
+        btnText.textContent = 'Iniciar Sesión';
+        return;
+      }
+
+      // Status 400 - Validar el mensaje
+      if (res.status === 400) {
+        const mensajeError = data.error || 'Credenciales inválidas';
+        
+        // Si contiene "inactivo" o "deshabilitado" → es inactivo
+        if (mensajeError.toLowerCase().includes('inactivo') || 
+            mensajeError.toLowerCase().includes('deshabilitado')) {
+          mostrarMensaje(mensajeError, 'error');
+        } else {
+          mostrarMensaje(mensajeError, 'warning');
+        }
+        
+        btn.disabled = false;
+        btnText.textContent = 'Iniciar Sesión';
+        return;
+      }
+
+      // Otros errores
+      if (!res.ok || !data.ok) {
+        const errorMsg = data?.error || 'Usuario o contraseña incorrecta';
+        mostrarMensaje(errorMsg, 'warning');
+        
+        btn.disabled = false;
+        btnText.textContent = 'Iniciar Sesión';
+        return;
+      }
+
+      // Validar que el usuario tenga rol
+      if (!data.user || !data.user.role) {
+        mostrarMensaje('Error: Tu usuario no tiene rol asignado', 'error');
+        
+        btn.disabled = false;
+        btnText.textContent = 'Iniciar Sesión';
+        return;
+      }
+
+      // Login exitoso
+      console.log('Login exitoso:', data.user);
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
 
-      const role = data.user?.role;
+      // Mostrar mensaje de éxito EN EL HTML
+      mostrarMensaje(`¡Bienvenido ${data.user.full_name}!`, 'success');
       
-      // Determina la URL de redirección usando el mapa o la página por defecto
-      const redirectURL = roleRedirectMap[role] || defaultPage;
-      
-      location.replace(redirectURL);
+      // Redirigir después de 1.5 segundos
+      setTimeout(() => {
+        const role = data.user.role;
+        const redirectURL = roleRedirectMap[role] || defaultPage;
+        console.log('Redirigiendo a:', redirectURL);
+        location.replace(redirectURL);
+      }, 1500);
 
     } catch (err) {
-     msg.textContent = 'No se pudo conectar. Intenta de nuevo.';
+      console.error('Error de conexión:', err);
+      mostrarMensaje('No se pudo conectar. Intenta de nuevo.', 'error');
+      
+      btn.disabled = false;
+      btnText.textContent = 'Iniciar Sesión';
     }
+  });
+
+  // Función para mostrar mensaje en el HTML
+  function mostrarMensaje(texto, tipo = 'warning') {
+    msg.innerHTML = '';
+    msg.classList.remove('show', 'error', 'warning', 'success');
+    
+    let icono = 'fas fa-exclamation-triangle';
+    if (tipo === 'error') icono = 'fas fa-times-circle';
+    if (tipo === 'success') icono = 'fas fa-check-circle';
+    if (tipo === 'warning') icono = 'fas fa-exclamation-triangle';
+    
+    msg.innerHTML = `<i class="fas ${icono}"></i> ${texto}`;
+    msg.classList.add(tipo, 'show');
+  }
+
+  // Función para limpiar mensaje
+  function limpiarMensaje() {
+    msg.innerHTML = '';
+    msg.classList.remove('show', 'error', 'warning', 'success');
+  }
+
+  // Permitir presionar Enter en los inputs
+  document.getElementById('email').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') form.dispatchEvent(new Event('submit'));
+  });
+  
+  document.getElementById('password').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') form.dispatchEvent(new Event('submit'));
   });
 });
-
-
-
-
-/*window.addEventListener('DOMContentLoaded', () => {
-  const form = document.getElementById('form');
-  const msg = document.getElementById('msg');
-
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    msg.textContent = '';
-
-    const email = document.getElementById('email').value.trim();
-    const password = document.getElementById('password').value;
-
-    try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type':'application/json' },
-        body: JSON.stringify({ email, password })
-      });
-      const data = await res.json();
-
-      if (!res.ok || !data.ok) {
-        msg.textContent = data?.error || 'Usuario o contraseña incorrecta';
-        return;
-      }
-
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
-
-      const role = data.user?.role;
-      if (role === 'ADMIN') {
-        location.replace('/usuarios.html');
-      } else if (role === 'TRANSPORTISTA') {
-        location.replace('/duca.html');
-      } else if (role === 'AGENTE') { 
-        location.replace('/agente.html');
-      }
-      else {
-        // fallback: elige la landing que prefieras para otros roles
-        location.replace('/usuarios.html');
-      }
-    } catch (err) {
-      msg.textContent = 'No se pudo conectar. Intenta de nuevo.';
-    }
-  });
-});*/
