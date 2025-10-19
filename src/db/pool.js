@@ -2,7 +2,7 @@ import pg from 'pg';
 const { Pool } = pg;
 
 const connectionString =
-  'postgresql://db_web_rnpd_user:MkTqFGNda8p79AqNvweWiZzuGypq32BK@dpg-d3ijuoruibrs73d00gug-a.oregon-postgres.render.com:5432/db_web_rnpd?sslmode=require';
+  'postgresql://admin_siglad:K2wAoSPwxXgPAOflv1oZ9XE3fOcHhdxD@dpg-d3q32hali9vc73c1bj6g-a.oregon-postgres.render.com/siglad_db_909c?sslmode=require';
 
 export const pool = new Pool({
   connectionString,
