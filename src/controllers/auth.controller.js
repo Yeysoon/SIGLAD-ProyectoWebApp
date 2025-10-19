@@ -75,6 +75,7 @@ export async function login(req, res, next) {
       user: {
         id: u.id,
         name: u.full_name,
+        full_name: u.full_name,
         email: u.email,
         role: u.role_code,
         role_name: u.role_name

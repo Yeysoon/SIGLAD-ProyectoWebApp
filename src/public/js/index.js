@@ -109,7 +109,7 @@ window.addEventListener('DOMContentLoaded', () => {
       localStorage.setItem('user', JSON.stringify(data.user));
 
       // Mostrar mensaje de éxito EN EL HTML
-      mostrarMensaje(`¡Bienvenido ${data.user.email}!`, 'success');
+      mostrarMensaje(`¡Bienvenido ${data.user.full_name}!`, 'success');
       
       // Redirigir después de 1.5 segundos
       setTimeout(() => {
