@@ -7,7 +7,7 @@ window.addEventListener('DOMContentLoaded', () => {
   // Mapeo de roles a la página de inicio
   const roleRedirectMap = {
     'ADMIN': '/usuarios.html',
-    'TRANSPORTISTA': '/duca.html',
+    'TRANSPORTISTA': '/dashboardDuca.html',
     'AGENTE': '/agente.html',
     'IMPORTADOR': '/importador.html'
   };

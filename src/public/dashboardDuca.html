@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard Transportista - SIGLAD</title>
+  <link rel="stylesheet" href="css/usuarios.css">
+</head>
+<body>
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">SIGLAD</div>
+      <div class="sidebar-subtitle">Gestión Logística</div>
+    </div>
+    <ul class="sidebar-menu">
+      <li>
+        <a href="dashboardDuca.html" class="active">
+          <i>📊</i>
+          <span>Dashboard</span>
+        </a>
+      </li>
+      <li>
+        <a href="duca.html">
+          <i>📋</i>
+          <span>Crear DUCA</span>
+        </a>
+      </li>
+      <li>
+        <a href="statusDuca.html">
+          <i>📈</i>
+          <span>Estado de DUCAs</span>
+        </a>
+      </li>
+      <li>
+        <a href="#" id="btnLogout">
+          <i>🚪</i>
+          <span>Cerrar Sesión</span>
+        </a>
+      </li>
+    </ul>
+  </aside>
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="header-title">Dashboard Transportista</div>
+    <div class="header-actions">
+      <div class="user-info">
+        <div class="user-avatar" id="userAvatar">T</div>
+        <div>
+          <div style="font-weight: 600;" id="userName">Usuario Transportista</div>
+          <div style="font-size: 12px; color: #7f8c8d;" id="userEmail"></div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTENT -->
+  <main class="main-content">
+    <!-- Estadísticas -->
+    <div class="stats-container">
+      <div class="stat-card total">
+        <div class="stat-icon">📦</div>
+        <div class="stat-number" id="statTotal">0</div>
+        <div class="stat-label">Total de DUCAs</div>
+      </div>
+      <div class="stat-card active">
+        <div class="stat-icon">⏳</div>
+        <div class="stat-number" id="statPendiente">0</div>
+        <div class="stat-label">Pendientes</div>
+      </div>
+      <div class="stat-card" style="border-left-color: #2ecc71;">
+        <div class="stat-icon">✅</div>
+        <div class="stat-number" id="statValidada">0</div>
+        <div class="stat-label">Validadas</div>
+      </div>
+      <div class="stat-card inactive">
+        <div class="stat-icon">❌</div>
+        <div class="stat-number" id="statRechazada">0</div>
+        <div class="stat-label">Rechazadas</div>
+      </div>
+    </div>
+
+    <!-- Acciones Rápidas -->
+    <div class="quick-actions">
+      <h3>⚡ Acciones Rápidas</h3>
+      <div class="action-buttons">
+        <a href="duca.html" class="action-btn">
+          <i>📋</i>
+          <span>Crear Nueva DUCA</span>
+        </a>
+        <a href="statusDuca.html" class="action-btn">
+          <i>📊</i>
+          <span>Ver Todas las DUCAs</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- DUCAs Recientes -->
+    <div class="quick-actions">
+      <h3>📋 DUCAs Recientes</h3>
+      <div id="recentList" style="margin-top: 15px;">
+        <p style="color: #7f8c8d; text-align: center; padding: 20px;">Cargando...</p>
+      </div>
+    </div>
+  </main>
+
+  <script src="js/duca.js"></script>
+</body>
+</html>
