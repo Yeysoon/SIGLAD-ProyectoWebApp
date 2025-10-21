@@ -8,7 +8,7 @@ window.addEventListener('DOMContentLoaded', () => {
   const roleRedirectMap = {
     'ADMIN': '/usuarios.html',
     'TRANSPORTISTA': '/dashboardDuca.html',
-    'AGENTE': '/agente.html',
+    'AGENTE': '/dashboardAgente.html',
     'IMPORTADOR': '/importador.html'
   };
   
