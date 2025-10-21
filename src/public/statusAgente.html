@@ -9,10 +9,17 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="./css/usuarios.css" rel="stylesheet">
   <link href="./css/statusDuca.css" rel="stylesheet">
+  <style>
+    /* estilos mínimos para que el panel de status no rompa nada */
+    .filters-section { margin: 20px; }
+    .table-section { margin: 20px; }
+    .filter-group { display:flex; align-items:center; gap:12px; }
+    .filter-group select { min-width:180px; }
+  </style>
 </head>
 <body>
 
-  <!-- SIDEBAR -->
+  <!-- SIDEBAR (igual que antes) -->
   <aside class="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">SIGLAD</div>
@@ -32,20 +39,29 @@
     <div class="header-title">Estado General de DUCA´s</div>
     <div class="header-actions">
       <div class="user-info">
-            <div class="user-avatar">A</div>
-            <span>Agente Aduanero</span>
-        </div>
+        <div class="user-avatar">A</div>
+        <span id="roleInfo">Agente Aduanero</span>
+      </div>
     </div>
   </header>
 
   <!-- MAIN CONTENT -->
   <main class="main-content">
+
+    <!-- Mensajes / debug (opcional) -->
+    <div style="margin: 16px;">
+      <span id="status" class="text-muted"></span>
+      <pre id="serverOut" style="display:none; white-space:pre-wrap; background:#f8f9fa; padding:8px; border-radius:6px;"></pre>
+      <div id="valErrors" style="color:#b00020;"></div>
+    </div>
+
     <!-- Filtros -->
-    <div class="filters-section">
-      <h3><i class="fas fa-filter"></i> Filtrar DUCAs</h3>
-      <div class="filter-group">
-        <label for="filterStatusAgente">Estado:</label>
-        <select id="filterStatusAgente" onchange="filterTable()">
+    <div class="filters-section card p-3">
+      <h5><i class="fas fa-filter"></i> Filtrar DUCAs</h5>
+      <div class="filter-group mt-2">
+        <label for="filterStatusAgente" class="mb-0">Estado:</label>
+        <!-- Nota: los VALUE están en mayúscula y singular para coincidir con estadoDocumento -->
+        <select id="filterStatusAgente" disabled onchange="filterTable()">
           <option value="TODOS">Todos</option>
           <option value="PENDIENTE">Pendientes</option>
           <option value="VALIDADA">Validadas</option>
@@ -55,31 +71,35 @@
     </div>
 
     <!-- Tabla -->
-    <div class="table-section">
-      <h3><i class="fas fa-list"></i> Listado de DUCAs</h3>
-      <table>
-        <thead>
-          <tr>
-            <th>Número Documento</th>
-            <th>Fecha Emisión</th>
-            <th>Tipo Operación</th>
-            <th>Valor Total</th>
-            <th>Estado</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody id="allDucasTableBody">
-          <tr>
-            <td colspan="6" style="text-align:center; padding:30px; color:#7f8c8d;">
-              Cargando...
-            </td>
-          </tr>
-        </tbody>
-      </table>
+    <div class="table-section card p-3">
+      <h5><i class="fas fa-list"></i> Listado de DUCAs</h5>
+      <div class="table-responsive">
+        <table class="table table-striped mb-0">
+          <thead>
+            <tr>
+              <th>Número Documento</th>
+              <th>Fecha Emisión</th>
+              <th>Tipo Operación</th>
+              <th>Valor Total</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="allDucasTableBody">
+            <tr>
+              <td colspan="6" class="text-center py-4 text-muted">
+                Cargando DUCAs...
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
+
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- Asegúrate de que la ruta coincida con la ubicación real -->
   <script src="/js/agente.js"></script>
 </body>
 </html>

@@ -3,13 +3,13 @@ import {
   authRequired, 
   transportistaOnly,
   agenteOnly,
-  //transportistaOrImportador
 } from '../middlewares/auth.js';
 import { 
   recepcionDUCA,
   getPendingDeclarations, 
   validateDeclaration, 
-  getMyDeclarationsStatus
+  getMyDeclarationsStatus,
+  getAllDeclarations  // 🚨 AGREGAR ESTA LÍNEA
 } from '../controllers/duca.controller.js';
 
 const router = Router();
@@ -17,9 +17,12 @@ const router = Router();
 // Solo autenticado + rol TRANSPORTISTA
 router.post('/recepcion', authRequired, transportistaOnly, recepcionDUCA);
 
-// Sección añadida
+// 🚨 RUTAS PARA AGENTE
 router.get('/declarations/pending', authRequired, agenteOnly, getPendingDeclarations);
-router.post('/declarations/validate', authRequired, agenteOnly, validateDeclaration); // Cambiado de PATCH a POST
-router.get('/declarations/status', authRequired, transportistaOnly, getMyDeclarationsStatus); // Cambiado de /my-declarations/status a /declarations/status
+router.get('/declarations/all', authRequired, agenteOnly, getAllDeclarations); // 🚨 NUEVA RUTA
+router.post('/declarations/validate', authRequired, agenteOnly, validateDeclaration);
+
+// Ruta para transportista
+router.get('/declarations/status', authRequired, transportistaOnly, getMyDeclarationsStatus);
 
 export default router;

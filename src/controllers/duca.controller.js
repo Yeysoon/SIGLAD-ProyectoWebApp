@@ -315,3 +315,47 @@ export async function getMyDeclarationsStatus(req, res) {
     return res.status(500).json({ ok: false, error: 'Error interno al consultar el estado de las declaraciones.' });
   }
 }
+
+// GET /api/duca/declarations/all - Para Dashboard y StatusAgente
+export async function getAllDeclarations(req, res) {
+  const ip = getClientIp(req);
+  const ua = getUA(req);
+  const userId = req.user.id;
+  const username = getUsername(req);
+
+  try {
+    const q = `
+      SELECT 
+          numero_documento AS "numeroDocumento", 
+          fecha_emision AS "fechaEmision", 
+          tipo_operacion AS "tipoOperacion", 
+          valor_aduana_total AS "valorAduanaTotal", 
+          moneda, 
+          estado_documento AS "estadoDocumento"
+      FROM 
+          public.duca_declarations 
+      ORDER BY 
+          fecha_emision DESC
+    `;
+    
+    const { rows } = await pool.query(q);
+    
+    await pool.query(
+      `INSERT INTO public.declaration_log (user_id, usuario, ip_address, user_agent, operation, result, notes)
+       VALUES ($1, $2, $3, $4, 'DECLARATION_ALL_QUERY', 'EXITO', $5)`,
+      [userId, username, ip, ua, `El agente ${username} consultó ${rows.length} declaraciones totales.`]
+    );
+    
+    console.log(`✅ getAllDeclarations: ${rows.length} DUCAs encontradas`);
+    
+    return res.status(200).json({ ok: true, data: rows });
+  } catch (err) {
+    console.error('❌ Error en getAllDeclarations:', err);
+    await pool.query(
+      `INSERT INTO public.declaration_log (user_id, usuario, ip_address, user_agent, operation, result, notes)
+       VALUES ($1, $2, $3, $4, 'DECLARATION_ALL_QUERY', 'FALLO', $5)`,
+      [userId, username, ip, ua, err.message || 'Error en consulta']
+    );
+    return res.status(500).json({ ok: false, error: 'Error de servidor.' });
+  }
+}
