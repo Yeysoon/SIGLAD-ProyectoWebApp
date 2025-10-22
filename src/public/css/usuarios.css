@@ -18,6 +18,7 @@
       left: 0;
       top: 0;
       width: 260px;
+      height: 100px;
       z-index: 1000;
       overflow-y: auto;
     }
@@ -33,7 +34,7 @@
       color: white;
       font-size: 24px;
       font-weight: 700;
-      margin-bottom: 5px;
+      margin-bottom: 10px;
     }
 
     .sidebar-subtitle {
@@ -77,7 +78,10 @@
       font-size: 16px;
     }
 
-    /* HEADER */
+    .sidebar ul {
+      padding: 0rem;
+    }
+
     .header {
       background: white;
       padding: 15px 30px;
@@ -242,7 +246,7 @@
       }
 
       .sidebar-header {
-        padding: 15px 0;
+        padding: 20px 0;
       }
 
       .sidebar-logo {
