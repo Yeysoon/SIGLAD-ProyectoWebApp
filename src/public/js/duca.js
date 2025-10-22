@@ -417,26 +417,46 @@ function renumberMercancias() {
   });
 }
 
+// BOTÓN 1: LIMPIAR FORMULARIO - CON SWEETALERT
 function resetForm() {
-  if (confirm('¿Está seguro de limpiar todo el formulario?')) {
-    const form = document.getElementById('ducaForm');
-    if (form) form.reset();
-    
-    const preview = document.getElementById('jsonPreview');
-    if (preview) preview.textContent = '{}';
-    
-    const statusForm = document.getElementById('statusForm');
-    const valErrorsForm = document.getElementById('valErrorsForm');
-    if (statusForm) statusForm.innerHTML = '';
-    if (valErrorsForm) valErrorsForm.innerHTML = '';
-    
-    const serverResponse = document.getElementById('serverResponseForm');
-    if (serverResponse) serverResponse.style.display = 'none';
-    
-    // Resetear fecha actual
-    const fechaInput = document.getElementById('fechaEmision');
-    if (fechaInput) fechaInput.valueAsDate = new Date();
-  }
+  Swal.fire({
+    title: '¿Limpiar Formulario?',
+    text: 'Se perderán todos los datos ingresados',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#e74c3c',
+    cancelButtonColor: '#95a5a6',
+    confirmButtonText: 'Sí, limpiar',
+    cancelButtonText: 'Cancelar'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      const form = document.getElementById('ducaForm');
+      if (form) form.reset();
+      
+      const preview = document.getElementById('jsonPreview');
+      if (preview) preview.textContent = '{}';
+      
+      const statusForm = document.getElementById('statusForm');
+      const valErrorsForm = document.getElementById('valErrorsForm');
+      if (statusForm) statusForm.innerHTML = '';
+      if (valErrorsForm) valErrorsForm.innerHTML = '';
+      
+      const serverResponse = document.getElementById('serverResponseForm');
+      if (serverResponse) serverResponse.style.display = 'none';
+      
+      // Resetear fecha actual
+      const fechaInput = document.getElementById('fechaEmision');
+      if (fechaInput) fechaInput.valueAsDate = new Date();
+
+      Swal.fire({
+        icon: 'success',
+        title: 'Formulario Limpio',
+        text: 'El formulario ha sido reiniciado',
+        timer: 1500,
+        showConfirmButton: false
+      });
+    }
+  });
 }
 
 function validateForm() {
@@ -461,22 +481,44 @@ function validateForm() {
       if (statusForm) {
         statusForm.innerHTML = '<span class="badge bg-warning">⚠️ Formulario incompleto</span>';
       }
+      
+      Swal.fire({
+        icon: 'warning',
+        title: 'Formulario Incompleto',
+        html: '<ul style="text-align: left;">' + errors.map(e => `<li>${escapeHtml(e)}</li>`).join('') + '</ul>',
+        confirmButtonColor: '#f39c12'
+      });
     } else {
       if (valErrorsForm) {
-        valErrorsForm.innerHTML = '<div class="alert alert-success">✅ Formulario válido. Puede proceder a enviar.</div>';
+        valErrorsForm.innerHTML = '<div class="alert alert-success">Formulario válido. Puede proceder a enviar.</div>';
       }
       if (statusForm) {
-        statusForm.innerHTML = '<span class="badge bg-success">✅ Validación exitosa</span>';
+        statusForm.innerHTML = '<span class="badge bg-success">Validación exitosa</span>';
       }
+      
+      Swal.fire({
+        icon: 'success',
+        title: 'Validación Exitosa',
+        text: 'Todos los campos requeridos están completos',
+        confirmButtonColor: '#27ae60'
+      });
     }
   } else {
     form.reportValidity();
     if (statusForm) {
-      statusForm.innerHTML = '<span class="badge bg-danger">❌ Complete los campos requeridos</span>';
+      statusForm.innerHTML = '<span class="badge bg-danger"> Complete los campos requeridos</span>';
     }
+    
+    Swal.fire({
+      icon: 'error',
+      title: 'Campos Requeridos',
+      text: 'Complete todos los campos marcados como obligatorios *',
+      confirmButtonColor: '#3498db'
+    });
   }
 }
 
+// BOTÓN 3: ENVIAR DUCA - CON SWEETALERT
 async function sendDUCAFromForm(e) {
   e.preventDefault();
   
@@ -492,13 +534,34 @@ async function sendDUCAFromForm(e) {
     statusForm.innerHTML = '<span class="badge bg-warning"><i class="fas fa-spinner fa-spin"></i> Enviando...</span>';
   }
   
+  // Mostrar loading con SweetAlert
+  Swal.fire({
+    title: 'Enviando DUCA',
+    text: 'Por favor espere...',
+    icon: 'info',
+    allowOutsideClick: false,
+    allowEscapeKey: false,
+    showConfirmButton: false,
+    didOpen: () => {
+      Swal.showLoading();
+    }
+  });
+  
   try {
     const token = localStorage.getItem('token');
     if (!token) {
       if (statusForm) {
         statusForm.innerHTML = '<span class="badge bg-danger">❌ No autenticado</span>';
       }
-      setTimeout(() => location.replace('/index.html'), 1500);
+      
+      Swal.fire({
+        icon: 'error',
+        title: 'No Autenticado',
+        text: 'Su sesión ha expirado. Será redirigido al login.',
+        confirmButtonColor: '#3498db'
+      }).then(() => {
+        setTimeout(() => location.replace('/index.html'), 1500);
+      });
       return;
     }
 
@@ -529,6 +592,13 @@ async function sendDUCAFromForm(e) {
         if (statusForm) {
           statusForm.innerHTML = '<span class="badge bg-danger">❌ Verifique los campos obligatorios</span>';
         }
+        
+        Swal.fire({
+          icon: 'error',
+          title: 'Campos Obligatorios',
+          html: '<ul style="text-align: left;">' + details.map(e => `<li>${escapeHtml(e)}</li>`).join('') + '</ul>',
+          confirmButtonColor: '#3498db'
+        });
         return;
       }
       if (res.status === 409) {
@@ -538,12 +608,26 @@ async function sendDUCAFromForm(e) {
         if (valErrorsForm) {
           valErrorsForm.innerHTML = `<div class="alert alert-warning">${escapeHtml(body.error)}</div>`;
         }
+        
+        Swal.fire({
+          icon: 'warning',
+          title: 'DUCA Duplicada',
+          text: body.error || 'Esta DUCA ya ha sido registrada',
+          confirmButtonColor: '#3498db'
+        });
         return;
       }
       if (res.status === 403) {
         if (statusForm) {
           statusForm.innerHTML = '<span class="badge bg-danger">❌ No autorizado (se requiere TRANSPORTISTA)</span>';
         }
+        
+        Swal.fire({
+          icon: 'error',
+          title: 'No Autorizado',
+          text: 'Se requiere rol TRANSPORTISTA para enviar DUCAs',
+          confirmButtonColor: '#3498db'
+        });
         return;
       }
       if (statusForm) {
@@ -552,6 +636,13 @@ async function sendDUCAFromForm(e) {
       if (valErrorsForm) {
         valErrorsForm.innerHTML = `<div class="alert alert-danger">${escapeHtml(body.error || 'Error al registrar la declaración')}</div>`;
       }
+      
+      Swal.fire({
+        icon: 'error',
+        title: 'Error al Registrar',
+        text: body.error || `Error HTTP ${res.status}`,
+        confirmButtonColor: '#3498db'
+      });
       return;
     }
 
@@ -559,12 +650,40 @@ async function sendDUCAFromForm(e) {
       statusForm.innerHTML = '<span class="badge bg-success"><i class="fas fa-check-circle"></i> ¡Declaración registrada correctamente!</span>';
     }
     
-    // Opcional: Limpiar formulario después de envío exitoso
-    setTimeout(() => {
-      if (confirm('DUCA registrada exitosamente. ¿Desea crear otra DUCA?')) {
-        resetForm();
+    // Éxito con SweetAlert - Preguntar si quiere crear otra
+    Swal.fire({
+      icon: 'success',
+      title: '¡DUCA Registrada!',
+      html: `
+        <p>La declaración ha sido registrada correctamente</p>
+        <p style="font-weight: bold; color: #27ae60; font-size: 18px; margin-top: 10px;">
+          ${escapeHtml(body.data?.numeroDocumento || jsonData.duca.numeroDocumento)}
+        </p>
+      `,
+      showCancelButton: true,
+      confirmButtonColor: '#27ae60',
+      cancelButtonColor: '#95a5a6',
+      confirmButtonText: 'Crear otra DUCA',
+      cancelButtonText: 'Cerrar'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        // Limpiar formulario para crear otra
+        const form = document.getElementById('ducaForm');
+        if (form) form.reset();
+        
+        const preview = document.getElementById('jsonPreview');
+        if (preview) preview.textContent = '{}';
+        
+        if (serverResponseForm) serverResponseForm.style.display = 'none';
+        if (statusForm) statusForm.innerHTML = '';
+        if (valErrorsForm) valErrorsForm.innerHTML = '';
+        
+        const fechaInput = document.getElementById('fechaEmision');
+        if (fechaInput) fechaInput.valueAsDate = new Date();
+        
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       }
-    }, 2000);
+    });
     
   } catch (err) {
     if (serverOutForm) {
@@ -576,6 +695,13 @@ async function sendDUCAFromForm(e) {
     if (valErrorsForm) {
       valErrorsForm.innerHTML = '<div class="alert alert-danger">No se pudo conectar con el servidor</div>';
     }
+    
+    Swal.fire({
+      icon: 'error',
+      title: 'Error de Conexión',
+      text: 'No se pudo conectar con el servidor. Verifique su conexión a internet.',
+      confirmButtonColor: '#3498db'
+    });
   }
 }
 
