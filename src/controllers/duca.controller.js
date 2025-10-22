@@ -328,16 +328,20 @@ export async function getAllDeclarations(req, res) {
       SELECT 
           d.numero_documento AS "numeroDocumento", 
           d.fecha_emision AS "fechaEmision", 
-          u.full_name AS "full_name",
+          u.full_name as "full_name",
+          ua.full_name as "full_name2",
           d.tipo_operacion AS "tipoOperacion", 
           d.valor_aduana_total AS "valorAduanaTotal", 
           d.moneda, 
           d.estado_documento AS "estadoDocumento"
       FROM 
           public.duca_declarations d
-      LEFT JOIN public.users u ON u.id = d.created_by_user_id
+      left join public.users u 
+      on u.id = d.created_by_user_id 
+      left join public.users ua
+      on ua.id = d.agente_validador_id 
       ORDER BY 
-          d.fecha_emision DESC
+          fecha_emision DESC
     `;
     
     const { rows } = await pool.query(q);

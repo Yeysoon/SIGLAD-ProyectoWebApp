@@ -242,11 +242,13 @@ function renderAllDucasTable(ducaList) {
                          : 'badge bg-secondary';
 
         const row = allDucasTableBody.insertRow();
-        const creadorNombre = duca.full_name ? escapeHtml(duca.full_name) : '<em class="text-muted">Sin nombre</em>'
+        const creadorNombre = duca.full_name ? escapeHtml(duca.full_name) : '<em class="text-muted">Sin creador</em>'
+        const creadorNombre2 = duca.full_name2 ? escapeHtml(duca.full_name2) : '<em class="text-muted">Pendiente de Validarlo</em>'
         row.innerHTML = `
             <td>${escapeHtml(duca.numeroDocumento)}</td>
             <td>${escapeHtml(duca.fechaEmision)}</td>
-            <td>${creadorNombre}</td> 
+            <td>${creadorNombre}</td>
+            <td>${creadorNombre2}</td> 
             <td>${escapeHtml(duca.tipoOperacion)}</td>
             <td>${valorTotal} ${escapeHtml(duca.moneda)}</td>
             <td><span class="${estadoClass}" data-estado="${estadoNorm}">${estado}</span></td>
