@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Estado de DUCAs - SIGLAD</title>
-  <link rel="stylesheet" href="css/usuarios.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="./css/usuarios.css" rel="stylesheet">
   <link href="css/statusDuca.css" rel="stylesheet">
 </head>
 <body>
@@ -16,26 +17,22 @@
     </div>
     <ul class="sidebar-menu">
       <li>
-        <a href="dashboardDuca.html">
-          <i>📊</i>
+        <a href="dashboardDuca.html"><i class="fas fa-th-large"></i> 
           <span>Dashboard</span>
         </a>
       </li>
       <li>
-        <a href="duca.html">
-          <i>📋</i>
+        <a href="duca.html"><i class="fa-solid fa-folder-plus"></i>
           <span>Crear DUCA</span>
         </a>
       </li>
       <li>
-        <a href="statusDuca.html" class="active">
-          <i>📈</i>
+        <a href="statusDuca.html" class="active"><i class="fa-solid fa-bars-progress"></i>
           <span>Estado de DUCAs</span>
         </a>
       </li>
       <li>
-        <a href="#" id="btnLogout">
-          <i>🚪</i>
+        <a href="#" id="btnLogout"><i class="fas fa-sign-out-alt"></i>
           <span>Cerrar Sesión</span>
         </a>
       </li>
@@ -46,9 +43,12 @@
   <header class="header">
     <div class="header-title">Estado de DUCAs</div>
     <div class="header-actions">
-      <button onclick="loadStatusDucas()" style="padding: 8px 16px; background: #3498db; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">
-        🔄 Actualizar
-      </button>
+      <div class="user-info">
+        <div class="user-avatar" id="userAvatar">T</div>
+        <div>
+          <span id="roleInfo">Usuario Transportista</span>
+        </div>
+      </div>
     </div>
   </header>
 
@@ -56,7 +56,7 @@
   <main class="main-content">
     <!-- Filtros -->
     <div class="filters-section">
-      <h3>🔍 Filtrar DUCAs</h3>
+      <h3> Filtrar DUCAs</h3>
       <div class="filter-group">
         <label for="filterStatus">Estado:</label>
         <select id="filterStatus">
@@ -70,7 +70,7 @@
 
     <!-- Tabla de DUCAs -->
     <div class="table-section">
-      <h3>📋 Mis Declaraciones</h3>
+      <h3> Mis Declaraciones</h3>
       <table>
         <thead>
           <tr>
@@ -79,7 +79,6 @@
             <th>Tipo Operación</th>
             <th>Valor Total</th>
             <th>Estado</th>
-            <th>Acciones</th>
           </tr>
         </thead>
         <tbody id="ducasTableBody">
@@ -93,18 +92,6 @@
     </div>
   </main>
 
-  <!-- Modal de Detalles -->
-  <div id="ducaModal" class="modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3>📄 Detalles de la DUCA</h3>
-        <span class="close-modal" onclick="closeModal()">&times;</span>
-      </div>
-      <div class="modal-body" id="ducaDetails">
-        <!-- Contenido dinámico -->
-      </div>
-    </div>
-  </div>
 
   <script src="js/duca.js"></script>
 </body>

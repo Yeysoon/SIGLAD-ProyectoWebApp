@@ -28,7 +28,7 @@ init();
 function init() {
   const user = safeJson(localStorage.getItem('user')) || {};
   if (roleInfo) {
-    roleInfo.textContent = user?.role ? `Autenticado como: ${user.role} · ${user.email || ''}` : '';
+    roleInfo.textContent = user?.role ? ` ${user.role} | ${user.full_name || ''}` : '';
   }
   const token = localStorage.getItem('token');
   if (!token) return goLogin();
@@ -396,11 +396,6 @@ function displayDucasTable(ducas) {
         <td>${escapeHtml(duca.tipoOperacion || '-')}</td>
         <td>$${parseFloat(duca.valorAduanaTotal || 0).toLocaleString('es-GT', {minimumFractionDigits: 2})}</td>
         <td><span class="badge ${badgeClass}">${escapeHtml(duca.estadoDocumento)}</span></td>
-        <td>
-          <button class="btn btn-sm btn-info" onclick="viewDucaDetails('${escapeHtml(duca.numeroDocumento)}')">
-            👁️ Ver
-          </button>
-        </td>
       </tr>
     `;
   }).join('');
