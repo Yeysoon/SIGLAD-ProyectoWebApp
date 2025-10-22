@@ -29,10 +29,32 @@ function authHeaders() {
   return { Authorization: `Bearer ${t}` };
 }
 
+// LOGOUT CON SWEETALERT2
 function logout() {
-  localStorage.removeItem('token');
-  localStorage.removeItem('user');
-  location.replace('/index.html');
+  Swal.fire({
+    title: '¿Cerrar Sesión?',
+    text: '¿Está seguro que desea salir del sistema?',
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonColor: '#3498db',
+    cancelButtonColor: '#95a5a6',
+    confirmButtonText: '<i class="fas fa-sign-out-alt"></i> Sí, cerrar sesión',
+    cancelButtonText: 'Cancelar'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      Swal.fire({
+        icon: 'success',
+        title: 'Sesión Cerrada',
+        text: 'Hasta pronto',
+        timer: 1500,
+        showConfirmButton: false
+      }).then(() => {
+        location.replace('/index.html');
+      });
+    }
+  });
 }
 
 // ELEMENTOS DEL DOM
@@ -46,23 +68,6 @@ if (btnLogout) {
   btnLogout.addEventListener('click', (e) => {
     e.preventDefault();
     logout();
-  });
-}
-
-// Esperar a que Swal esté disponible
-function esperarSwal() {
-  return new Promise((resolve) => {
-    if (typeof Swal !== 'undefined') {
-      resolve();
-    } else {
-      const interval = setInterval(() => {
-        if (typeof Swal !== 'undefined') {
-          clearInterval(interval);
-          resolve();
-        }
-      }, 100);
-      setTimeout(() => clearInterval(interval), 5000);
-    }
   });
 }
 
@@ -91,6 +96,20 @@ if (form) {
     };
 
     console.log('Enviando:', body);
+    
+    // Mostrar loading
+    Swal.fire({
+      title: 'Creando Usuario',
+      text: 'Por favor espere...',
+      icon: 'info',
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      showConfirmButton: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
+    
     const res = await API.create(body);
     console.log('Respuesta:', res);
 
@@ -101,25 +120,16 @@ if (form) {
     if (!res.ok) {
       if (statusEl) {
         statusEl.innerHTML =
-          '<span class="badge bg-danger"><i class="fas fa-times-circle"></i> Error al crear el correo ya existe</span>';
+          '<span class="badge bg-danger"><i class="fas fa-times-circle"></i> Error al crear</span>';
       }
 
-      try {
-        await esperarSwal();
-        if (typeof Swal !== 'undefined') {
-          await Swal.fire({
-            icon: 'error',
-            title: 'Error al crear usuario',
-            text: res.error || 'No se pudo crear el usuario',
-            confirmButtonColor: '#e74c3c',
-            confirmButtonText: 'Entendido',
-          });
-        } else {
-          alert('Error: ' + (res.error || 'No se pudo crear el usuario'));
-        }
-      } catch (e) {
-        alert('Error: ' + (res.error || 'No se pudo crear el usuario'));
-      }
+      Swal.fire({
+        icon: 'error',
+        title: 'Error al Crear Usuario',
+        text: res.error || 'El correo ya existe o hay un problema con los datos',
+        confirmButtonColor: '#e74c3c',
+        confirmButtonText: 'Entendido',
+      });
       return;
     }
 
@@ -129,64 +139,34 @@ if (form) {
         '<span class="badge bg-success"><i class="fas fa-check-circle"></i> Usuario creado exitosamente</span>';
     }
 
-    try {
-      await esperarSwal();
-      if (typeof Swal !== 'undefined') {
-        await Swal.fire({
-          icon: 'success',
-          title: '¡Usuario Creado!',
-          html: `
-            <p>El usuario <strong>${body.full_name}</strong> ha sido creado exitosamente.</p>
-            <p style="color: #7f8c8d; font-size: 14px; margin-top: 10px;">
-              <i class="fas fa-envelope"></i> ${body.email}<br>
-              <i class="fas fa-user-tag"></i> Rol: ${body.role_code}
-            </p>
-          `,
-          confirmButtonColor: '#2ecc71',
-          confirmButtonText: 'Ir a Lista de Usuarios',
-          showCancelButton: true,
-          cancelButtonText: 'Crear Otro',
-          cancelButtonColor: '#3498db',
-        }).then((result) => {
-          if (result.isConfirmed) {
-            // Ir a listar usuarios
-            location.href = 'listarUsuarios.html';
-          } else {
-            // Limpiar formulario para crear otro
-            form.reset();
-            document.getElementById('is_active').value = 'true';
-            if (statusEl) statusEl.innerHTML = '';
-          }
-        });
-      } else {
-        // Fallback sin SweetAlert2
-        alert(
-          '✅ Usuario creado correctamente:\n\n' +
-            'Nombre: ' +
-            body.full_name +
-            '\n' +
-            'Email: ' +
-            body.email +
-            '\n' +
-            'Rol: ' +
-            body.role_code
-        );
-
-        if (confirm('¿Desea ir a la lista de usuarios?')) {
-          location.href = 'listarUsuarios.html';
-        } else {
-          form.reset();
-          document.getElementById('is_active').value = 'true';
-          if (statusEl) statusEl.innerHTML = '';
-        }
-      }
-    } catch (e) {
-      // Si falla SweetAlert, usar alert simple
-      alert('✅ Usuario creado correctamente');
-      setTimeout(() => {
+    Swal.fire({
+      icon: 'success',
+      title: '¡Usuario Creado!',
+      html: `
+        <div style="text-align: left; padding: 20px;">
+          <p style="margin-bottom: 15px;">El usuario ha sido creado exitosamente:</p>
+          <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 4px solid #27ae60;">
+            <p style="margin: 5px 0;"><i class="fas fa-user" style="width: 20px; color: #3498db;"></i> <strong>${escapeHtml(body.full_name)}</strong></p>
+            <p style="margin: 5px 0;"><i class="fas fa-envelope" style="width: 20px; color: #3498db;"></i> ${escapeHtml(body.email)}</p>
+            <p style="margin: 5px 0;"><i class="fas fa-user-tag" style="width: 20px; color: #3498db;"></i> Rol: <strong>${body.role_code}</strong></p>
+            <p style="margin: 5px 0;"><i class="fas fa-circle" style="width: 20px; color: ${body.is_active ? '#27ae60' : '#e74c3c'};"></i> Estado: ${body.is_active ? 'Activo' : 'Inactivo'}</p>
+          </div>
+        </div>
+      `,
+      confirmButtonColor: '#27ae60',
+      confirmButtonText: '<i class="fas fa-list"></i> Ir a Lista de Usuarios',
+      showCancelButton: true,
+      cancelButtonText: '<i class="fas fa-plus"></i> Crear Otro',
+      cancelButtonColor: '#3498db',
+    }).then((result) => {
+      if (result.isConfirmed) {
         location.href = 'listarUsuarios.html';
-      }, 1500);
-    }
+      } else if (result.dismiss === Swal.DismissReason.cancel) {
+        form.reset();
+        document.getElementById('is_active').value = 'true';
+        if (statusEl) statusEl.innerHTML = '';
+      }
+    });
   });
 }
 
@@ -194,13 +174,42 @@ if (form) {
 async function loadUsers() {
   if (statusEl) statusEl.textContent = 'Cargando usuarios...';
 
+  // Mostrar loading
+  Swal.fire({
+    title: 'Cargando Usuarios',
+    text: 'Obteniendo lista de usuarios...',
+    icon: 'info',
+    allowOutsideClick: false,
+    showConfirmButton: false,
+    didOpen: () => {
+      Swal.showLoading();
+    }
+  });
+
   const res = await API.list();
   console.log('Lista de usuarios:', res);
 
+  Swal.close();
+
   if (!res.ok) {
     if (statusEl) statusEl.textContent = res.error || 'Error al cargar';
+    
     if (res.error && /Token/.test(res.error)) {
-      logout();
+      Swal.fire({
+        icon: 'warning',
+        title: 'Sesión Expirada',
+        text: 'Su sesión ha expirado. Por favor, inicie sesión nuevamente.',
+        confirmButtonColor: '#3498db'
+      }).then(() => {
+        logout();
+      });
+    } else {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error al Cargar',
+        text: res.error || 'No se pudo obtener la lista de usuarios',
+        confirmButtonColor: '#e74c3c'
+      });
     }
     return;
   }
@@ -213,6 +222,15 @@ async function loadUsers() {
   }
 
   renderUsers(users);
+  
+  if (users.length === 0) {
+    Swal.fire({
+      icon: 'info',
+      title: 'Sin Usuarios',
+      text: 'No hay usuarios registrados en el sistema',
+      confirmButtonColor: '#3498db'
+    });
+  }
 }
 
 // CARGAR ESTADÍSTICAS - En usuarios.html dashboard
@@ -224,7 +242,16 @@ async function loadStats() {
 
     if (!res.ok) {
       console.error('Error en stats:', res.error);
-      if (res.error && /Token/.test(res.error)) logout();
+      if (res.error && /Token/.test(res.error)) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Sesión Expirada',
+          text: 'Su sesión ha expirado. Por favor, inicie sesión nuevamente.',
+          confirmButtonColor: '#3498db'
+        }).then(() => {
+          logout();
+        });
+      }
       return;
     }
 
@@ -244,6 +271,12 @@ async function loadStats() {
     if (inactiveEl) inactiveEl.textContent = inactive;
   } catch (error) {
     console.error('Error en loadStats:', error);
+    Swal.fire({
+      icon: 'error',
+      title: 'Error al Cargar Estadísticas',
+      text: 'No se pudieron obtener las estadísticas del sistema',
+      confirmButtonColor: '#e74c3c'
+    });
   }
 }
 
@@ -335,10 +368,47 @@ if (tblBody) {
       const payload = pickRow(tr);
       console.log('Actualizando usuario', id, ':', payload);
 
+      // Confirmación antes de guardar
+      const result = await Swal.fire({
+        title: '¿Guardar Cambios?',
+        html: `
+          <div style="text-align: left;">
+            <p>Se actualizará el usuario con los siguientes datos:</p>
+            <ul style="list-style: none; padding: 10px; background: #f8f9fa; border-radius: 5px;">
+              <li><i class="fas fa-user"></i> <strong>Nombre:</strong> ${escapeHtml(payload.full_name)}</li>
+              <li><i class="fas fa-envelope"></i> <strong>Email:</strong> ${escapeHtml(payload.email)}</li>
+              <li><i class="fas fa-user-tag"></i> <strong>Rol:</strong> ${payload.role_code}</li>
+              <li><i class="fas fa-circle" style="color: ${payload.is_active ? '#27ae60' : '#e74c3c'}"></i> <strong>Estado:</strong> ${payload.is_active ? 'Activo' : 'Inactivo'}</li>
+            </ul>
+          </div>
+        `,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#3498db',
+        cancelButtonColor: '#95a5a6',
+        confirmButtonText: '<i class="fas fa-check"></i> Sí, guardar',
+        cancelButtonText: 'Cancelar'
+      });
+
+      if (!result.isConfirmed) return;
+
       // Cambiar botón a estado de carga
       const btnOriginalHTML = btn.innerHTML;
       btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
       btn.disabled = true;
+
+      // Mostrar loading
+      Swal.fire({
+        title: 'Actualizando Usuario',
+        text: 'Por favor espere...',
+        icon: 'info',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        showConfirmButton: false,
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });
 
       const res = await API.update(id, payload);
       console.log('Respuesta actualización:', res);
@@ -348,49 +418,27 @@ if (tblBody) {
       btn.disabled = false;
 
       if (!res.ok) {
-        try {
-          await esperarSwal();
-          if (typeof Swal !== 'undefined') {
-            await Swal.fire({
-              icon: 'error',
-              title: 'Error',
-              text: res.error || 'No se pudo actualizar',
-              confirmButtonColor: '#e74c3c',
-            });
-          } else {
-            alert('Error: ' + (res.error || 'No se pudo actualizar'));
-          }
-        } catch (e) {
-          alert('Error: ' + (res.error || 'No se pudo actualizar'));
-        }
+        Swal.fire({
+          icon: 'error',
+          title: 'Error al Actualizar',
+          text: res.error || 'No se pudo actualizar el usuario',
+          confirmButtonColor: '#e74c3c',
+        });
         if (statusEl) statusEl.textContent = res.error || 'Error al actualizar';
         return;
       }
 
-      try {
-        await esperarSwal();
-        if (typeof Swal !== 'undefined') {
-          await Swal.fire({
-            icon: 'success',
-            title: '¡Actualizado!',
-            text: 'Usuario actualizado correctamente',
-            timer: 1500,
-            showConfirmButton: false,
-          });
-        } else {
-          // Mostrar feedback visual sin alert
-          btn.innerHTML = '<i class="fas fa-check"></i> ¡Guardado!';
-          setTimeout(() => {
-            btn.innerHTML = btnOriginalHTML;
-          }, 2000);
-        }
-      } catch (e) {
-        console.log('Swal no disponible, mostrando feedback visual');
-        btn.innerHTML = '<i class="fas fa-check"></i> ¡Guardado!';
-        setTimeout(() => {
-          btn.innerHTML = btnOriginalHTML;
-        }, 2000);
-      }
+      // Éxito
+      Swal.fire({
+        icon: 'success',
+        title: '¡Usuario Actualizado!',
+        html: `
+          <p>Los datos del usuario han sido actualizados correctamente</p>
+          <p style="font-weight: bold; color: #27ae60; margin-top: 10px;">${escapeHtml(payload.full_name)}</p>
+        `,
+        timer: 2000,
+        showConfirmButton: false,
+      });
 
       if (statusEl) statusEl.textContent = 'Usuario actualizado correctamente';
 
