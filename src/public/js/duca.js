@@ -90,6 +90,33 @@ function authHeaders() {
   return { 'Authorization': `Bearer ${t}` };
 }
 
+function logout() {
+  Swal.fire({
+    title: '¿Cerrar Sesión?',
+    text: '¿Está seguro que desea salir del sistema?',
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonColor: '#3498db',
+    cancelButtonColor: '#95a5a6',
+    confirmButtonText: '<i class="fas fa-sign-out-alt"></i> Sí, cerrar sesión',
+    cancelButtonText: 'Cancelar'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      Swal.fire({
+        icon: 'success',
+        title: 'Sesión Cerrada',
+        text: 'Hasta pronto',
+        timer: 1500,
+        showConfirmButton: false
+      }).then(() => {
+        location.replace('/index.html');
+      });
+    }
+  });
+}
+
 function showStatus(msg) {
   if (statusEl) {
     statusEl.textContent = msg || '';
