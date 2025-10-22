@@ -21,19 +21,14 @@ function logout() {
 const form = document.getElementById('formNew');
 const tblBody = document.querySelector('#tblUsers tbody');
 const statusEl = document.getElementById('status');
-const btnReload = document.getElementById('btnReload');
 
-// LOGOUT - En cualquier página (buscar en links del sidebar)
-document.addEventListener('click', (e) => {
-  if (e.target.textContent.includes('Cerrar sesión') || e.target.closest('[onclick*="logout"]')) {
-    logout();
-  }
-});
-
-// Alternativa directa - si hay botón btnLogout
+// LOGOUT
 const btnLogout = document.getElementById('btnLogout');
 if (btnLogout) {
-  btnLogout.addEventListener('click', logout);
+  btnLogout.addEventListener('click', (e) => {
+    e.preventDefault();
+    logout();
+  });
 }
 
 // Esperar a que Swal esté disponible
@@ -114,7 +109,7 @@ if (form) {
 
 // CARGAR USUARIOS - En listarUsuarios.html
 async function loadUsers() {
-  if (statusEl) statusEl.textContent = 'Cargando...';
+  if (statusEl) statusEl.textContent = 'Cargando usuarios...';
   
   const res = await API.list();
   console.log('Lista de usuarios:', res);
@@ -127,8 +122,12 @@ async function loadUsers() {
     return;
   }
   
-  if (statusEl) statusEl.textContent = '';
-  renderUsers(res.users || []);
+  const users = res.users || [];
+  if (statusEl) {
+    statusEl.textContent = `Total: ${users.length} usuario${users.length !== 1 ? 's' : ''}`;
+  }
+  
+  renderUsers(users);
 }
 
 // CARGAR ESTADÍSTICAS - En usuarios.html dashboard
@@ -167,16 +166,45 @@ async function loadStats() {
 function renderUsers(users) {
   if (!tblBody) return;
   
+  if (users.length === 0) {
+    tblBody.innerHTML = `
+      <tr>
+        <td colspan="6" class="empty-state">
+          <i class="fas fa-users-slash"></i>
+          <h4>No hay usuarios registrados</h4>
+          <p>Comienza creando el primer usuario del sistema</p>
+        </td>
+      </tr>
+    `;
+    return;
+  }
+  
   tblBody.innerHTML = '';
   users.forEach(u => {
+    const roleBadgeClass = {
+      'ADMIN': 'badge-admin',
+      'TRANSPORTISTA': 'badge-transportista',
+      'IMPORTADOR': 'badge-importador',
+      'AGENTE': 'badge-agente'
+    }[u.role_code] || 'badge-agente';
+
+    const statusBadgeClass = u.is_active ? 'badge-activo' : 'badge-inactivo';
+    const statusText = u.is_active ? 'Activo' : 'Inactivo';
+    
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td>${u.id}</td>
-      <td><input class="form-control form-control-sm" value="${escapeHtml(u.full_name)}" data-k="full_name"></td>
-      <td><input class="form-control form-control-sm" value="${escapeHtml(u.email)}" data-k="email"></td>
+      <td><span class="user-id">${u.id}</span></td>
+      <td>
+        <input class="form-control form-control-sm" value="${escapeHtml(u.full_name)}" data-k="full_name">
+      </td>
+      <td>
+        <input class="form-control form-control-sm" value="${escapeHtml(u.email)}" data-k="email" type="email">
+      </td>
       <td>
         <select class="form-select form-select-sm" data-k="role_code">
-          ${['ADMIN','IMPORTADOR','AGENTE','TRANSPORTISTA'].map(rc => `<option value="${rc}" ${rc===u.role_code?'selected':''}>${rc}</option>`).join('')}
+          ${['ADMIN','TRANSPORTISTA','IMPORTADOR','AGENTE'].map(rc => 
+            `<option value="${rc}" ${rc===u.role_code?'selected':''}>${rc}</option>`
+          ).join('')}
         </select>
       </td>
       <td>
@@ -185,16 +213,18 @@ function renderUsers(users) {
           <option value="false" ${!u.is_active?'selected':''}>Inactivo</option>
         </select>
       </td>
-      <td class="d-flex gap-2">
-        <button class="btn btn-sm btn-outline-success" data-act="save" data-id="${u.id}">Guardar</button>
-        <button class="btn btn-sm btn-outline-danger" data-act="del" data-id="${u.id}">Desactivar</button>
+      <td style="text-align: center;">
+        <button class="btn-action btn-save" data-act="save" data-id="${u.id}">
+          <i class="fas fa-save"></i>
+          Guardar
+        </button>
       </td>
     `;
     tblBody.appendChild(tr);
   });
 }
 
-// EVENT LISTENER PARA TABLA
+// EVENT LISTENER PARA TABLA - Solo botón Guardar
 if (tblBody) {
   document.addEventListener('click', async (e) => {
     const btn = e.target.closest('button[data-act]');
@@ -208,8 +238,17 @@ if (tblBody) {
       const payload = pickRow(tr);
       console.log('Actualizando usuario', id, ':', payload);
       
+      // Cambiar botón a estado de carga
+      const btnOriginalHTML = btn.innerHTML;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+      btn.disabled = true;
+      
       const res = await API.update(id, payload);
       console.log('Respuesta actualización:', res);
+      
+      // Restaurar botón
+      btn.innerHTML = btnOriginalHTML;
+      btn.disabled = false;
       
       if (!res.ok) {
         try {
@@ -226,7 +265,7 @@ if (tblBody) {
         } catch (e) {
           alert('Error: ' + (res.error || 'No se pudo actualizar'));
         }
-        if (statusEl) statusEl.textContent = res.error || 'Error';
+        if (statusEl) statusEl.textContent = res.error || 'Error al actualizar';
         return;
       }
 
@@ -237,97 +276,31 @@ if (tblBody) {
             icon: 'success',
             title: '¡Actualizado!',
             text: 'Usuario actualizado correctamente',
-            timer: 1500
+            timer: 1500,
+            showConfirmButton: false
           });
         } else {
-          alert('Usuario actualizado correctamente');
+          // Mostrar feedback visual sin alert
+          btn.innerHTML = '<i class="fas fa-check"></i> ¡Guardado!';
+          setTimeout(() => {
+            btn.innerHTML = btnOriginalHTML;
+          }, 2000);
         }
       } catch (e) {
-        console.log('Swal no disponible, continuando');
+        console.log('Swal no disponible, mostrando feedback visual');
+        btn.innerHTML = '<i class="fas fa-check"></i> ¡Guardado!';
+        setTimeout(() => {
+          btn.innerHTML = btnOriginalHTML;
+        }, 2000);
       }
 
-      if (statusEl) statusEl.textContent = 'Actualizado';
-      loadUsers();
-    }
-
-    // DESACTIVAR
-    if (btn.dataset.act === 'del') {
-      console.log('Click en desactivar, id:', id);
+      if (statusEl) statusEl.textContent = 'Usuario actualizado correctamente';
       
-      try {
-        await esperarSwal();
-        
-        let confirmado = false;
-        
-        if (typeof Swal !== 'undefined') {
-          const result = await Swal.fire({
-            icon: 'warning',
-            title: '¿Desactivar usuario?',
-            text: 'Esta acción desactivará al usuario del sistema',
-            showCancelButton: true,
-            confirmButtonColor: '#e74c3c',
-            cancelButtonColor: '#95a5a6',
-            confirmButtonText: 'Sí, desactivar',
-            cancelButtonText: 'Cancelar'
-          });
-          confirmado = result.isConfirmed;
-          console.log('Resultado de confirmación:', confirmado);
-        } else {
-          confirmado = window.confirm('¿Desactivar usuario? Esta acción es irreversible.');
-          console.log('Confirmado con window.confirm:', confirmado);
-        }
-        
-        if (!confirmado) {
-          console.log('Usuario canceló la desactivación');
-          return;
-        }
-
-        console.log('Enviando DELETE a /api/users/' + id);
-        const res = await API.del(id);
-        console.log('Respuesta DELETE completa:', res);
-        console.log('¿res.ok?:', res.ok);
-        
-        if (!res.ok) {
-          console.error('Error en respuesta:', res.error);
-          if (typeof Swal !== 'undefined') {
-            await Swal.fire({
-              icon: 'error',
-              title: 'Error',
-              text: res.error || 'No se pudo desactivar'
-            });
-          } else {
-            alert('Error: ' + (res.error || 'No se pudo desactivar'));
-          }
-          if (statusEl) statusEl.textContent = res.error || 'Error';
-          return;
-        }
-
-        console.log('Desactivación exitosa');
-        if (typeof Swal !== 'undefined') {
-          await Swal.fire({
-            icon: 'success',
-            title: '¡Desactivado!',
-            text: 'Usuario desactivado correctamente',
-            timer: 1500
-          });
-        } else {
-          alert('Usuario desactivado correctamente');
-        }
-
-        if (statusEl) statusEl.textContent = 'Usuario desactivado';
+      // Recargar después de 1 segundo
+      setTimeout(() => {
         loadUsers();
-      } catch (error) {
-        console.error('Error en desactivación:', error);
-        alert('Error: ' + error.message);
-      }
+      }, 1000);
     }
-  });
-}
-
-// BOTON RECARGAR
-if (btnReload) {
-  btnReload.addEventListener('click', () => {
-    loadUsers();
   });
 }
 
@@ -342,12 +315,12 @@ function pickRow(tr) {
 }
 
 function escapeHtml(s='') {
-  return s.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 }
 
 // EJECUTAR AL CARGAR
 document.addEventListener('DOMContentLoaded', () => {
-  console.log('Usuario.js cargado');
+  console.log('Usuarios.js cargado');
   
   // Si estamos en la tabla de usuarios
   if (tblBody) {
