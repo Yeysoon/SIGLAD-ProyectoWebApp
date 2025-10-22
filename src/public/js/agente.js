@@ -1,4 +1,4 @@
-// agente.js (REEMPLAZAR COMPLETO con esta versión)
+// agente.js - CON SWEETALERT2
 
 // === Elementos de la UI ===
 const statusEl = document.getElementById('status');
@@ -31,8 +31,16 @@ function init() {
     if (!token) return goLogin();
 
     if (user?.role !== 'AGENTE') {
-        showError('Solo AGENTE puede usar este módulo. Redirigiendo…');
-        setTimeout(() => location.replace('/usuarios.html'), 1500);
+        Swal.fire({
+            icon: 'warning',
+            title: 'Acceso Restringido',
+            text: 'Solo usuarios con rol AGENTE pueden usar este módulo. Redirigiendo...',
+            timer: 2000,
+            timerProgressBar: true,
+            showConfirmButton: false
+        }).then(() => {
+            location.replace('/usuarios.html');
+        });
         return;
     }
 
@@ -45,7 +53,6 @@ function init() {
     } else if (path.includes('statusAgente.html')) {
         console.log('🔷 Cargando vista: Estado General (con tabla)');
         loadAllDucas(true);
-        // enableFilter() será llamado luego de cargar y renderizar las DUCAs
     } else if (path.includes('dashboardAgente.html')) {
         console.log('🔷 Cargando vista: Dashboard (solo stats)');
         loadAllDucas(false);
@@ -54,8 +61,36 @@ function init() {
 
 // === Utilidades ===
 function goLogin() { location.replace('/index.html'); }
-function logout() { localStorage.removeItem('token'); localStorage.removeItem('user'); goLogin(); }
+
+function logout() {
+    Swal.fire({
+        title: '¿Cerrar Sesión?',
+        text: '¿Está seguro que desea salir del sistema?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#3498db',
+        cancelButtonColor: '#95a5a6',
+        confirmButtonText: 'Sí, cerrar sesión',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            Swal.fire({
+                icon: 'success',
+                title: 'Sesión Cerrada',
+                text: 'Hasta pronto',
+                timer: 1500,
+                showConfirmButton: false
+            }).then(() => {
+                goLogin();
+            });
+        }
+    });
+}
+
 function authHeaders() { const t = localStorage.getItem('token'); return { 'Authorization': `Bearer ${t}` }; }
+
 function showStatus(msg) {
     if (statusEl) {
         statusEl.textContent = msg || '';
@@ -63,6 +98,7 @@ function showStatus(msg) {
         statusEl.classList.add('text-muted');
     }
 }
+
 function showError(msg, details) {
     if (statusEl) {
         statusEl.textContent = msg;
@@ -71,13 +107,12 @@ function showError(msg, details) {
     }
     if (valErrors) valErrors.textContent = details ? details.join('\n') : '';
 }
+
 function clearMsgs() { showStatus(''); if (valErrors) valErrors.textContent = ''; }
 function safeJson(x) { try { return JSON.parse(x); } catch (e) { console.error('Error parsing JSON:', e); return null; } }
 function escapeHtml(s = '') { return (s + '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m])); }
 
-// Normaliza string: trim, sin acentos simples, mayúsculas
 function normalizeText(s = '') {
-    // quitar tildes comunes y normalizar espacios
     const map = { 'á':'a','é':'e','í':'i','ó':'o','ú':'u','Á':'A','É':'E','Í':'I','Ó':'O','Ú':'U' };
     let out = (s || '').toString().trim();
     out = out.replace(/[áéíóúÁÉÍÓÚ]/g, m => map[m] || m);
@@ -85,15 +120,12 @@ function normalizeText(s = '') {
     return out.toUpperCase();
 }
 
-// Mapea el valor seleccionado (puede ser "Pendientes", "PENDIENTE", "PENDIENTES") al estado canónico
 function selectedToCanonical(selected) {
     const n = normalizeText(selected);
     if (!n || n === 'TODOS' || n === 'ALL') return 'TODOS';
-    // posibles variantes
     if (n.includes('PEND') ) return 'PENDIENTE';
     if (n.includes('VALID') ) return 'VALIDADA';
     if (n.includes('RECH') ) return 'RECHAZADA';
-    // fallback: si viene ya igual
     return n;
 }
 
@@ -101,6 +133,17 @@ function selectedToCanonical(selected) {
 async function loadPendingDuca() {
     clearMsgs();
     showStatus('Cargando lista de trabajo...');
+
+    Swal.fire({
+        title: 'Cargando DUCAs',
+        text: 'Obteniendo declaraciones pendientes...',
+        icon: 'info',
+        allowOutsideClick: false,
+        showConfirmButton: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
 
     try {
         const res = await fetch('/api/duca/declarations/pending', {
@@ -113,14 +156,36 @@ async function loadPendingDuca() {
         console.log('✅ Respuesta de pending - Estado HTTP:', res.status, 'Cuerpo:', body);
 
         if (!res.ok || !body.ok) {
-            if (res.status === 403) return showError('No autorizado. Se requiere rol AGENTE.');
+            Swal.fire({
+                icon: 'error',
+                title: 'Error al Cargar',
+                text: res.status === 403 ? 'No autorizado. Se requiere rol AGENTE.' : (body.error || `Error HTTP ${res.status}`),
+                confirmButtonColor: '#3498db'
+            });
             return showError('Error al cargar la lista', [body.error || `HTTP ${res.status}`]);
         }
 
         renderPendingTable(body.data || []);
         showStatus(`Lista cargada. ${body.data?.length || 0} DUCA(s) pendientes.`);
+        
+        Swal.close();
+        
+        if (body.data?.length === 0) {
+            Swal.fire({
+                icon: 'info',
+                title: 'Sin DUCAs Pendientes',
+                text: 'No hay declaraciones pendientes de validación en este momento.',
+                confirmButtonColor: '#3498db'
+            });
+        }
     } catch (err) {
         console.error('❌ Error en loadPendingDuca:', err);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error de Conexión',
+            text: 'No se pudo conectar con el servidor para cargar la lista.',
+            confirmButtonColor: '#3498db'
+        });
         showError('No se pudo conectar con el servidor para cargar la lista.');
     }
 }
@@ -147,8 +212,12 @@ function renderPendingTable(ducaList) {
             <td>${escapeHtml(duca.nombreImportador)}</td>
             <td>${valorTotal} ${escapeHtml(duca.moneda)}</td>
             <td>
-                <button class="btn btn-sm btn-success btn-validar" data-numero="${escapeHtml(duca.numeroDocumento)}">Validar</button>
-                <button class="btn btn-sm btn-danger btn-rechazar" data-numero="${escapeHtml(duca.numeroDocumento)}">Rechazar</button>
+                <button class="btn btn-sm btn-success btn-validar" data-numero="${escapeHtml(duca.numeroDocumento)}">
+                    <i class="fas fa-check"></i> Validar
+                </button>
+                <button class="btn btn-sm btn-danger btn-rechazar" data-numero="${escapeHtml(duca.numeroDocumento)}">
+                    <i class="fas fa-times"></i> Rechazar
+                </button>
             </td>
         `;
     });
@@ -160,24 +229,69 @@ function attachButtonListeners() {
     document.querySelectorAll('.btn-validar').forEach(btn => {
         btn.addEventListener('click', function() {
             const numero = this.getAttribute('data-numero');
-            if (confirm(`¿Confirma que desea VALIDAR la DUCA ${numero}?`)) {
-                const comentarios = prompt('Comentarios (opcional):') || 'Validada por agente';
-                sendValidation(numero, 'VALIDADA', comentarios);
-            }
+            
+            Swal.fire({
+                title: 'Validar DUCA',
+                html: `
+                    <p>¿Confirma que desea <strong class="text-success">VALIDAR</strong> la DUCA?</p>
+                    <p style="font-size: 18px; font-weight: bold; color: #27ae60;">${escapeHtml(numero)}</p>
+                `,
+                input: 'textarea',
+                inputLabel: 'Comentarios (opcional)',
+                inputPlaceholder: 'Ingrese sus observaciones sobre la validación...',
+                inputAttributes: {
+                    'aria-label': 'Comentarios de validación'
+                },
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#27ae60',
+                cancelButtonColor: '#95a5a6',
+                confirmButtonText: '<i class="fas fa-check"></i> Sí, Validar',
+                cancelButtonText: 'Cancelar',
+                preConfirm: (comentarios) => {
+                    return comentarios || 'Validada por agente';
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    sendValidation(numero, 'VALIDADA', result.value);
+                }
+            });
         });
     });
 
     document.querySelectorAll('.btn-rechazar').forEach(btn => {
         btn.addEventListener('click', function() {
             const numero = this.getAttribute('data-numero');
-            if (confirm(`¿Confirma que desea RECHAZAR la DUCA ${numero}?`)) {
-                const comentarios = prompt('Motivo del rechazo (obligatorio):');
-                if (comentarios) {
-                    sendValidation(numero, 'RECHAZADA', comentarios);
-                } else {
-                    alert('Debe indicar el motivo del rechazo');
+            
+            Swal.fire({
+                title: 'Rechazar DUCA',
+                html: `
+                    <p>¿Confirma que desea <strong class="text-danger">RECHAZAR</strong> la DUCA?</p>
+                    <p style="font-size: 18px; font-weight: bold; color: #e74c3c;">${escapeHtml(numero)}</p>
+                `,
+                input: 'textarea',
+                inputLabel: 'Motivo del rechazo (obligatorio)',
+                inputPlaceholder: 'Debe indicar el motivo del rechazo...',
+                inputAttributes: {
+                    'aria-label': 'Motivo del rechazo',
+                    'required': 'required'
+                },
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#e74c3c',
+                cancelButtonColor: '#95a5a6',
+                confirmButtonText: '<i class="fas fa-times"></i> Sí, Rechazar',
+                cancelButtonText: 'Cancelar',
+                inputValidator: (value) => {
+                    if (!value || value.trim() === '') {
+                        return 'Debe indicar el motivo del rechazo';
+                    }
                 }
-            }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    sendValidation(numero, 'RECHAZADA', result.value);
+                }
+            });
         });
     });
 }
@@ -187,6 +301,19 @@ async function loadAllDucas(shouldRenderTable) {
     clearMsgs();
     if (statusEl) showStatus('Cargando todas las declaraciones...');
 
+    if (shouldRenderTable) {
+        Swal.fire({
+            title: 'Cargando DUCAs',
+            text: 'Obteniendo todas las declaraciones...',
+            icon: 'info',
+            allowOutsideClick: false,
+            showConfirmButton: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+    }
+
     try {
         const res = await fetch('/api/duca/declarations/all', {
             method: 'GET',
@@ -195,8 +322,16 @@ async function loadAllDucas(shouldRenderTable) {
         });
 
         const body = await res.json().catch(() => ({}));
+        
         if (!res.ok || !body.ok) {
-            if (res.status === 403) return showError('No autorizado. Se requiere rol AGENTE.');
+            if (shouldRenderTable) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error al Cargar',
+                    text: res.status === 403 ? 'No autorizado. Se requiere rol AGENTE.' : (body.error || `Error HTTP ${res.status}`),
+                    confirmButtonColor: '#3498db'
+                });
+            }
             return showError('Error al cargar la lista total', [body.error || `HTTP ${res.status}`]);
         }
 
@@ -206,13 +341,23 @@ async function loadAllDucas(shouldRenderTable) {
 
         if (shouldRenderTable) {
             renderAllDucasTable(allDucasData);
-            enableFilter(); // habilitamos el select una vez que los datos están cargados
+            enableFilter();
             if (statusEl) showStatus(`Lista total cargada. ${allDucasData.length} DUCA(s) encontradas.`);
+            Swal.close();
         } else {
             if (statusEl) showStatus(`Dashboard actualizado con ${allDucasData.length} DUCA(s).`);
         }
     } catch (err) {
         console.error('❌ Error en loadAllDucas:', err);
+        
+        if (shouldRenderTable) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error de Conexión',
+                text: 'No se pudo conectar con el servidor para cargar la lista.',
+                confirmButtonColor: '#3498db'
+            });
+        }
         showError('No se pudo conectar con el servidor para cargar la lista total.');
     }
 }
@@ -262,44 +407,50 @@ function enableFilter() {
     if (filter) {
         filter.addEventListener('change', filterTable);
     }
-
 }
 
 window.filterTable = function() {
-  const filter = document.getElementById('filterStatusAgente');
-  if (!filter) {
-    console.warn("⚠️ No se encontró el filtro en el DOM");
-    return;
-  }
+    const filter = document.getElementById('filterStatusAgente');
+    if (!filter) {
+        console.warn("⚠️ No se encontró el filtro en el DOM");
+        return;
+    }
 
-  const selected = filter.value;
-  console.log("🎯 Filtro seleccionado:", selected);
+    const selected = filter.value;
+    console.log("🎯 Filtro seleccionado:", selected);
 
-  if (!allDucasData || !Array.isArray(allDucasData) || allDucasData.length === 0) {
-    console.warn("⚠️ allDucasData vacío o no inicializado");
-    return;
-  }
+    if (!allDucasData || !Array.isArray(allDucasData) || allDucasData.length === 0) {
+        console.warn("⚠️ allDucasData vacío o no inicializado");
+        return;
+    }
 
-  // Normalizar texto y filtrar
-  let filtered;
-  if (selected === 'TODOS') {
-    filtered = allDucasData;
-  } else {
-    filtered = allDucasData.filter(d =>
-      (d.estadoDocumento || '').trim().toUpperCase() === selected.toUpperCase()
-    );
-  }
+    let filtered;
+    if (selected === 'TODOS') {
+        filtered = allDucasData;
+    } else {
+        filtered = allDucasData.filter(d =>
+            (d.estadoDocumento || '').trim().toUpperCase() === selected.toUpperCase()
+        );
+    }
 
-  console.log(`✅ Filtrando ${filtered.length} resultados de ${allDucasData.length}`);
+    console.log(`✅ Filtrando ${filtered.length} resultados de ${allDucasData.length}`);
 
-  renderAllDucasTable(filtered);
+    renderAllDucasTable(filtered);
 
-  if (statusEl) {
-    showStatus(`Mostrando ${filtered.length} DUCAs (${selected})`);
-  }
+    if (statusEl) {
+        showStatus(`Mostrando ${filtered.length} DUCAs (${selected})`);
+    }
+    
+    if (filtered.length === 0 && selected !== 'TODOS') {
+        Swal.fire({
+            icon: 'info',
+            title: 'Sin Resultados',
+            text: `No se encontraron DUCAs con estado: ${selected}`,
+            timer: 2000,
+            showConfirmButton: false
+        });
+    }
 };
-
-
 
 // === Dashboard ===
 function updateDashboardStats(ducaList) {
@@ -322,6 +473,17 @@ async function sendValidation(numeroDocumento, nuevoEstado, comentarios) {
 
     const payload = { numeroDocumento, nuevoEstado, comentarios: comentarios || 'Sin comentarios' };
 
+    Swal.fire({
+        title: 'Procesando...',
+        text: 'Enviando validación al servidor',
+        icon: 'info',
+        allowOutsideClick: false,
+        showConfirmButton: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+
     try {
         const res = await fetch('/api/duca/declarations/validate', {
             method: 'POST',
@@ -330,12 +492,43 @@ async function sendValidation(numeroDocumento, nuevoEstado, comentarios) {
         });
 
         const body = await res.json().catch(() => ({}));
-        if (!res.ok || !body.ok) return showError(body.error || 'Error al validar DUCA.');
+        
+        if (!res.ok || !body.ok) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error al Validar',
+                text: body.error || 'No se pudo procesar la validación',
+                confirmButtonColor: '#3498db'
+            });
+            return showError(body.error || 'Error al validar DUCA.');
+        }
 
         showStatus(`DUCA ${numeroDocumento} ha sido ${nuevoEstado} exitosamente`);
-        setTimeout(loadPendingDuca, 2000);
+        
+        const estadoTexto = nuevoEstado === 'VALIDADA' ? 'Validada' : 'Rechazada';
+        const iconoEstado = nuevoEstado === 'VALIDADA' ? 'success' : 'error';
+        
+        Swal.fire({
+            icon: iconoEstado,
+            title: `DUCA ${estadoTexto}`,
+            html: `
+                <p>La DUCA ha sido <strong>${estadoTexto.toLowerCase()}</strong> exitosamente</p>
+                <p style="font-weight: bold; font-size: 16px; margin-top: 10px;">${escapeHtml(numeroDocumento)}</p>
+            `,
+            confirmButtonColor: nuevoEstado === 'VALIDADA' ? '#27ae60' : '#3498db',
+            confirmButtonText: 'Aceptar'
+        }).then(() => {
+            setTimeout(loadPendingDuca, 1000);
+        });
+        
     } catch (err) {
         console.error('❌ Error en sendValidation:', err);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error de Conexión',
+            text: 'No se pudo conectar con el servidor',
+            confirmButtonColor: '#3498db'
+        });
         showError('No se pudo conectar con el servidor.');
     }
 }
