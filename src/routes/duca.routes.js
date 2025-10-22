@@ -9,7 +9,7 @@ import {
   getPendingDeclarations, 
   validateDeclaration, 
   getMyDeclarationsStatus,
-  getAllDeclarations  // 🚨 AGREGAR ESTA LÍNEA
+  getAllDeclarations  
 } from '../controllers/duca.controller.js';
 
 const router = Router();

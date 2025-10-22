@@ -60,13 +60,13 @@
       <h5><i class="fas fa-filter"></i> Filtrar DUCAs</h5>
       <div class="filter-group mt-2">
         <label for="filterStatusAgente" class="mb-0">Estado:</label>
-        <!-- Nota: los VALUE están en mayúscula y singular para coincidir con estadoDocumento -->
-        <select id="filterStatusAgente" disabled onchange="filterTable()">
-          <option value="TODOS">Todos</option>
-          <option value="PENDIENTE">Pendientes</option>
+        <select id="filterStatusAgente">
+          <option value="TODOS">Todas las Ducas</option>
           <option value="VALIDADA">Validadas</option>
+          <option value="PENDIENTE">Pendientes</option>
           <option value="RECHAZADA">Rechazadas</option>
         </select>
+
       </div>
     </div>
 
@@ -79,10 +79,10 @@
             <tr>
               <th>Número Documento</th>
               <th>Fecha Emisión</th>
+              <th>Creador de DUCA</th>
               <th>Tipo Operación</th>
               <th>Valor Total</th>
               <th>Estado</th>
-              <th>Acciones</th>
             </tr>
           </thead>
           <tbody id="allDucasTableBody">

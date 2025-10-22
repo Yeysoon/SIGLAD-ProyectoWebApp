@@ -326,19 +326,24 @@ export async function getAllDeclarations(req, res) {
   try {
     const q = `
       SELECT 
-          numero_documento AS "numeroDocumento", 
-          fecha_emision AS "fechaEmision", 
-          tipo_operacion AS "tipoOperacion", 
-          valor_aduana_total AS "valorAduanaTotal", 
-          moneda, 
-          estado_documento AS "estadoDocumento"
+          d.numero_documento AS "numeroDocumento", 
+          d.fecha_emision AS "fechaEmision", 
+          u.full_name AS "full_name",
+          d.tipo_operacion AS "tipoOperacion", 
+          d.valor_aduana_total AS "valorAduanaTotal", 
+          d.moneda, 
+          d.estado_documento AS "estadoDocumento"
       FROM 
-          public.duca_declarations 
+          public.duca_declarations d
+      LEFT JOIN public.users u ON u.id = d.created_by_user_id
       ORDER BY 
-          fecha_emision DESC
+          d.fecha_emision DESC
     `;
     
     const { rows } = await pool.query(q);
+    
+    // 🚨 DEBUG: Ver qué trae full_name
+    console.log('✅ Ejemplo de DUCA con full_name:', rows[0]);
     
     await pool.query(
       `INSERT INTO public.declaration_log (user_id, usuario, ip_address, user_agent, operation, result, notes)

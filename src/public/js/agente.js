@@ -1,3 +1,5 @@
+// agente.js (REEMPLAZAR COMPLETO con esta versión)
+
 // === Elementos de la UI ===
 const statusEl = document.getElementById('status');
 const serverOut = document.getElementById('serverOut');
@@ -12,7 +14,6 @@ const pendientesEl = document.getElementById('pendientes');
 const validadasEl = document.getElementById('validadas');
 const rechazadasEl = document.getElementById('rechazadas');
 
-// Variable global para almacenar todas las DUCAs
 let allDucasData = [];
 
 // === Event Listeners ===
@@ -23,10 +24,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
 function init() {
     const user = safeJson(localStorage.getItem('user')) || {};
-    if (roleInfo) roleInfo.textContent = user?.role ? `Autenticado como: ${user.role} · ${user.email || ''}` : '';
+    if (roleInfo) roleInfo.textContent = user?.role ? ` ${user.role} | ${user.full_name || ''}` : '';
     const token = localStorage.getItem('token');
     console.log('🔷 Inicio - User:', user, 'Token presente:', !!token);
-    
+
     if (!token) return goLogin();
 
     if (user?.role !== 'AGENTE') {
@@ -34,46 +35,67 @@ function init() {
         setTimeout(() => location.replace('/usuarios.html'), 1500);
         return;
     }
-    
-    // Lógica para cargar contenido basado en la URL
+
     const path = window.location.pathname;
     console.log('📄 Página actual:', path);
-    
+
     if (path.includes('agente.html')) {
         console.log('🔷 Cargando vista: Validar DUCAs');
         loadPendingDuca();
     } else if (path.includes('statusAgente.html')) {
         console.log('🔷 Cargando vista: Estado General (con tabla)');
-        loadAllDucas(true); 
-        enableFilter();
+        loadAllDucas(true);
+        // enableFilter() será llamado luego de cargar y renderizar las DUCAs
     } else if (path.includes('dashboardAgente.html')) {
         console.log('🔷 Cargando vista: Dashboard (solo stats)');
-        loadAllDucas(false); 
+        loadAllDucas(false);
     }
 }
 
-// === Funciones Utilitarias ===
+// === Utilidades ===
 function goLogin() { location.replace('/index.html'); }
 function logout() { localStorage.removeItem('token'); localStorage.removeItem('user'); goLogin(); }
 function authHeaders() { const t = localStorage.getItem('token'); return { 'Authorization': `Bearer ${t}` }; }
-function showStatus(msg) { 
+function showStatus(msg) {
     if (statusEl) {
-        statusEl.textContent = msg || ''; 
-        statusEl.classList.remove('text-danger'); 
-        statusEl.classList.add('text-muted'); 
+        statusEl.textContent = msg || '';
+        statusEl.classList.remove('text-danger');
+        statusEl.classList.add('text-muted');
     }
 }
-function showError(msg, details) { 
+function showError(msg, details) {
     if (statusEl) {
-        statusEl.textContent = msg; 
-        statusEl.classList.remove('text-muted'); 
-        statusEl.classList.add('text-danger'); 
+        statusEl.textContent = msg;
+        statusEl.classList.remove('text-muted');
+        statusEl.classList.add('text-danger');
     }
-    if (valErrors) valErrors.textContent = details ? details.join('\n') : ''; 
+    if (valErrors) valErrors.textContent = details ? details.join('\n') : '';
 }
 function clearMsgs() { showStatus(''); if (valErrors) valErrors.textContent = ''; }
 function safeJson(x) { try { return JSON.parse(x); } catch (e) { console.error('Error parsing JSON:', e); return null; } }
-function escapeHtml(s = '') { return s.replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m])); }
+function escapeHtml(s = '') { return (s + '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m])); }
+
+// Normaliza string: trim, sin acentos simples, mayúsculas
+function normalizeText(s = '') {
+    // quitar tildes comunes y normalizar espacios
+    const map = { 'á':'a','é':'e','í':'i','ó':'o','ú':'u','Á':'A','É':'E','Í':'I','Ó':'O','Ú':'U' };
+    let out = (s || '').toString().trim();
+    out = out.replace(/[áéíóúÁÉÍÓÚ]/g, m => map[m] || m);
+    out = out.replace(/\s+/g, ' ');
+    return out.toUpperCase();
+}
+
+// Mapea el valor seleccionado (puede ser "Pendientes", "PENDIENTE", "PENDIENTES") al estado canónico
+function selectedToCanonical(selected) {
+    const n = normalizeText(selected);
+    if (!n || n === 'TODOS' || n === 'ALL') return 'TODOS';
+    // posibles variantes
+    if (n.includes('PEND') ) return 'PENDIENTE';
+    if (n.includes('VALID') ) return 'VALIDADA';
+    if (n.includes('RECH') ) return 'RECHAZADA';
+    // fallback: si viene ya igual
+    return n;
+}
 
 // === Cargar DUCAs Pendientes ===
 async function loadPendingDuca() {
@@ -87,6 +109,7 @@ async function loadPendingDuca() {
             cache: 'no-store'
         });
         const body = await res.json().catch((e) => { console.error('Error parsing response:', e); return {}; });
+
         console.log('✅ Respuesta de pending - Estado HTTP:', res.status, 'Cuerpo:', body);
 
         if (!res.ok || !body.ok) {
@@ -104,9 +127,8 @@ async function loadPendingDuca() {
 
 function renderPendingTable(ducaList) {
     if (!pendingTableBody) return;
-    
-    pendingTableBody.innerHTML = '';
 
+    pendingTableBody.innerHTML = '';
     if (ducaList.length === 0) {
         pendingTableBody.innerHTML = '<tr><td colspan="6" class="text-center">No hay declaraciones PENDIENTE.</td></tr>';
         return;
@@ -116,7 +138,7 @@ function renderPendingTable(ducaList) {
         const valorTotal = typeof duca.valorAduanaTotal === 'number' && !isNaN(duca.valorAduanaTotal)
             ? duca.valorAduanaTotal.toFixed(2)
             : 'N/A';
-        
+
         const row = pendingTableBody.insertRow();
         row.innerHTML = `
             <td>${escapeHtml(duca.numeroDocumento)}</td>
@@ -163,7 +185,7 @@ function attachButtonListeners() {
 // === Cargar TODAS las DUCAs ===
 async function loadAllDucas(shouldRenderTable) {
     clearMsgs();
-    if (statusEl) showStatus('Cargando todas las declaraciones...'); 
+    if (statusEl) showStatus('Cargando todas las declaraciones...');
 
     try {
         const res = await fetch('/api/duca/declarations/all', {
@@ -171,7 +193,7 @@ async function loadAllDucas(shouldRenderTable) {
             headers: authHeaders(),
             cache: 'no-store'
         });
-        
+
         const body = await res.json().catch(() => ({}));
         if (!res.ok || !body.ok) {
             if (res.status === 403) return showError('No autorizado. Se requiere rol AGENTE.');
@@ -179,15 +201,18 @@ async function loadAllDucas(shouldRenderTable) {
         }
 
         allDucasData = body.data || [];
+        console.log('🔔 allDucasData cargado. Ejemplo[0]:', allDucasData[0]);
         updateDashboardStats(allDucasData);
 
         if (shouldRenderTable) {
             renderAllDucasTable(allDucasData);
+            enableFilter(); // habilitamos el select una vez que los datos están cargados
             if (statusEl) showStatus(`Lista total cargada. ${allDucasData.length} DUCA(s) encontradas.`);
         } else {
             if (statusEl) showStatus(`Dashboard actualizado con ${allDucasData.length} DUCA(s).`);
         }
     } catch (err) {
+        console.error('❌ Error en loadAllDucas:', err);
         showError('No se pudo conectar con el servidor para cargar la lista total.');
     }
 }
@@ -206,21 +231,25 @@ function renderAllDucasTable(ducaList) {
         const valorTotal = typeof duca.valorAduanaTotal === 'number' && !isNaN(duca.valorAduanaTotal)
             ? duca.valorAduanaTotal.toFixed(2)
             : (duca.valorAduanaTotal || 'N/A');
-        
-        const estado = escapeHtml(duca.estadoDocumento);
-        const estadoClass = estado === 'PENDIENTE' ? 'badge bg-warning text-dark'
-                         : estado === 'VALIDADA' ? 'badge bg-success'
-                         : estado === 'RECHAZADA' ? 'badge bg-danger'
+
+        const estadoRaw = duca.estadoDocumento || '';
+        const estado = escapeHtml(estadoRaw);
+        const estadoNorm = normalizeText(estadoRaw);
+
+        const estadoClass = estadoNorm === 'PENDIENTE' ? 'badge bg-warning text-dark'
+                         : estadoNorm === 'VALIDADA' ? 'badge bg-success'
+                         : estadoNorm === 'RECHAZADA' ? 'badge bg-danger'
                          : 'badge bg-secondary';
 
         const row = allDucasTableBody.insertRow();
+        const creadorNombre = duca.full_name ? escapeHtml(duca.full_name) : '<em class="text-muted">Sin nombre</em>'
         row.innerHTML = `
             <td>${escapeHtml(duca.numeroDocumento)}</td>
             <td>${escapeHtml(duca.fechaEmision)}</td>
+            <td>${creadorNombre}</td> 
             <td>${escapeHtml(duca.tipoOperacion)}</td>
             <td>${valorTotal} ${escapeHtml(duca.moneda)}</td>
-            <td><span class="${estadoClass}">${estado}</span></td>
-            <td><button class="btn btn-sm btn-info">Ver Detalle</button></td>
+            <td><span class="${estadoClass}" data-estado="${estadoNorm}">${estado}</span></td>
         `;
     });
 }
@@ -228,30 +257,55 @@ function renderAllDucasTable(ducaList) {
 // === Habilitar Filtro ===
 function enableFilter() {
     const filter = document.getElementById('filterStatusAgente');
-    if (filter) filter.disabled = false;
+    if (filter) {
+        filter.addEventListener('change', filterTable);
+    }
+
 }
 
-// === Filtrar Tabla ===
 window.filterTable = function() {
-    const filter = document.getElementById('filterStatusAgente');
-    if (!filter) return;
+  const filter = document.getElementById('filterStatusAgente');
+  if (!filter) {
+    console.warn("⚠️ No se encontró el filtro en el DOM");
+    return;
+  }
 
-    const selected = filter.value;
-    if (!allDucasData.length) return;
+  const selected = filter.value;
+  console.log("🎯 Filtro seleccionado:", selected);
 
-    const filtered = selected === 'TODOS' ? allDucasData
-        : allDucasData.filter(d => d.estadoDocumento === selected);
+  if (!allDucasData || !Array.isArray(allDucasData) || allDucasData.length === 0) {
+    console.warn("⚠️ allDucasData vacío o no inicializado");
+    return;
+  }
 
-    renderAllDucasTable(filtered);
+  // Normalizar texto y filtrar
+  let filtered;
+  if (selected === 'TODOS') {
+    filtered = allDucasData;
+  } else {
+    filtered = allDucasData.filter(d =>
+      (d.estadoDocumento || '').trim().toUpperCase() === selected.toUpperCase()
+    );
+  }
+
+  console.log(`✅ Filtrando ${filtered.length} resultados de ${allDucasData.length}`);
+
+  renderAllDucasTable(filtered);
+
+  if (statusEl) {
+    showStatus(`Mostrando ${filtered.length} DUCAs (${selected})`);
+  }
 };
+
+
 
 // === Dashboard ===
 function updateDashboardStats(ducaList) {
     if (!enProcesoEl) return;
     const total = ducaList.length;
-    const pendientes = ducaList.filter(d => d.estadoDocumento === 'PENDIENTE').length;
-    const validadas = ducaList.filter(d => d.estadoDocumento === 'VALIDADA').length;
-    const rechazadas = ducaList.filter(d => d.estadoDocumento === 'RECHAZADA').length;
+    const pendientes = ducaList.filter(d => normalizeText(d.estadoDocumento) === 'PENDIENTE').length;
+    const validadas = ducaList.filter(d => normalizeText(d.estadoDocumento) === 'VALIDADA').length;
+    const rechazadas = ducaList.filter(d => normalizeText(d.estadoDocumento) === 'RECHAZADA').length;
 
     enProcesoEl.textContent = total;
     pendientesEl.textContent = pendientes;
@@ -263,9 +317,9 @@ function updateDashboardStats(ducaList) {
 async function sendValidation(numeroDocumento, nuevoEstado, comentarios) {
     clearMsgs();
     showStatus(`Procesando ${numeroDocumento}...`);
-    
+
     const payload = { numeroDocumento, nuevoEstado, comentarios: comentarios || 'Sin comentarios' };
-    
+
     try {
         const res = await fetch('/api/duca/declarations/validate', {
             method: 'POST',
@@ -278,7 +332,8 @@ async function sendValidation(numeroDocumento, nuevoEstado, comentarios) {
 
         showStatus(`DUCA ${numeroDocumento} ha sido ${nuevoEstado} exitosamente`);
         setTimeout(loadPendingDuca, 2000);
-    } catch {
+    } catch (err) {
+        console.error('❌ Error en sendValidation:', err);
         showError('No se pudo conectar con el servidor.');
     }
 }
