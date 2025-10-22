@@ -254,26 +254,26 @@
     <ul class="sidebar-menu">
       <li>
         <a href="usuarios.html">
-          <i class="fas fa-th-large"></i> 
+          <i class="fas fa-th-large"></i>
           <span>Dashboard</span>
         </a>
       </li>
       <li>
         <a href="listarUsuarios.html">
-          <i class="fas fa-users"></i> 
+          <i class="fas fa-users"></i>
           <span>Usuarios</span>
         </a>
       </li>
       <li>
         <a href="crearUsuarios.html" class="active">
-          <i class="fas fa-user-plus"></i> 
+          <i class="fas fa-user-plus"></i>
           <span>Crear Usuario</span>
         </a>
       </li>
       <li><hr></li>
       <li>
         <a href="#" id="btnLogout">
-          <i class="fas fa-sign-out-alt"></i> 
+          <i class="fas fa-sign-out-alt"></i>
           <span>Cerrar sesión</span>
         </a>
       </li>
@@ -304,7 +304,7 @@
         Registro de Nuevo Usuario
       </h2>
       <form id="formNew">
-        
+
         <!-- Sección: Información Personal -->
         <div class="form-section">
           <div class="form-section-title">
@@ -317,11 +317,11 @@
               <span class="required">*</span>
             </label>
             <div class="input-group-icon"><i class="fa-solid fa-file-signature"></i>
-              <input 
-                id="full_name" 
-                type="text" 
-                class="form-control" 
-                placeholder="Ej: Juan Carlos Pérez López" 
+              <input
+                id="full_name"
+                type="text"
+                class="form-control"
+                placeholder="Ej: Juan Carlos Pérez López"
                 required
               >
             </div>
@@ -333,11 +333,11 @@
               <span class="required">*</span>
             </label>
             <div class="input-group-icon"><i class="fa-solid fa-at"></i>
-              <input 
-                id="email" 
-                type="email" 
-                class="form-control" 
-                placeholder="Ej: usuario@siglad.com.gt" 
+              <input
+                id="email"
+                type="email"
+                class="form-control"
+                placeholder="Ej: usuario@siglad.com.gt"
                 required
               >
             </div>
@@ -384,11 +384,11 @@
             </label>
             <div class="input-group-icon">
               <i class="fas fa-key"></i>
-              <input 
-                id="password" 
-                type="password" 
-                class="form-control" 
-                placeholder="Ingrese una contraseña segura" 
+              <input
+                id="password"
+                type="password"
+                class="form-control"
+                placeholder="Ingrese una contraseña segura"
                 minlength="6"
                 required
               >
@@ -406,7 +406,7 @@
             <i class="fas fa-save"></i>
             Crear Usuario
           </button>
-          
+
           <a href="listarUsuarios.html" class="btn-cancel">
             <i class="fas fa-times"></i>
             Cancelar
@@ -419,6 +419,7 @@
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="./vendor/sweetalert2.all.min.js"></script>
   <script src="/js/usuarios.js"></script>
 </body>
 </html>

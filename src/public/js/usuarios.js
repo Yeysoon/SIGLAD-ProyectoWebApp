@@ -1,14 +1,32 @@
 const API = {
-  list:  () => fetch('/api/users', { headers: authHeaders() }).then(r => r.json()),
-  create:(body) => fetch('/api/users', { method:'POST', headers: { ...authHeaders(), 'Content-Type':'application/json' }, body: JSON.stringify(body) }).then(r => r.json()),
-  update:(id, body) => fetch(`/api/users/${id}`, { method:'PUT', headers: { ...authHeaders(), 'Content-Type':'application/json' }, body: JSON.stringify(body) }).then(r => r.json()),
-  del:   (id) => fetch(`/api/users/${id}`, { method:'DELETE', headers: authHeaders() }).then(r => r.json())
+  list: () =>
+    fetch('/api/users', { headers: authHeaders() }).then((r) => r.json()),
+  create: (body) =>
+    fetch('/api/users', {
+      method: 'POST',
+      headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    }).then((r) => r.json()),
+  update: (id, body) =>
+    fetch(`/api/users/${id}`, {
+      method: 'PUT',
+      headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    }).then((r) => r.json()),
+  del: (id) =>
+    fetch(`/api/users/${id}`, {
+      method: 'DELETE',
+      headers: authHeaders(),
+    }).then((r) => r.json()),
 };
 
 function authHeaders() {
   const t = localStorage.getItem('token');
-  if (!t) { location.replace('/index.html'); return {}; }
-  return { 'Authorization': `Bearer ${t}` };
+  if (!t) {
+    location.replace('/index.html');
+    return {};
+  }
+  return { Authorization: `Bearer ${t}` };
 }
 
 function logout() {
@@ -52,38 +70,40 @@ function esperarSwal() {
 if (form) {
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    
+
     // Cambiar el botón a estado de carga
     const submitBtn = form.querySelector('button[type="submit"]');
     const originalBtnHTML = submitBtn.innerHTML;
     submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creando...';
     submitBtn.disabled = true;
-    
+
     if (statusEl) {
-      statusEl.innerHTML = '<span class="badge bg-warning"><i class="fas fa-spinner fa-spin"></i> Procesando...</span>';
+      statusEl.innerHTML =
+        '<span class="badge bg-warning"><i class="fas fa-spinner fa-spin"></i> Procesando...</span>';
     }
-    
+
     const body = {
-      full_name:  document.getElementById('full_name').value.trim(),
-      email:      document.getElementById('email').value.trim(),
-      role_code:  document.getElementById('role_code').value,
-      is_active:  document.getElementById('is_active').value === 'true',
-      password:   document.getElementById('password').value
+      full_name: document.getElementById('full_name').value.trim(),
+      email: document.getElementById('email').value.trim(),
+      role_code: document.getElementById('role_code').value,
+      is_active: document.getElementById('is_active').value === 'true',
+      password: document.getElementById('password').value,
     };
 
     console.log('Enviando:', body);
     const res = await API.create(body);
     console.log('Respuesta:', res);
-    
+
     // Restaurar botón
     submitBtn.innerHTML = originalBtnHTML;
     submitBtn.disabled = false;
-    
+
     if (!res.ok) {
       if (statusEl) {
-        statusEl.innerHTML = '<span class="badge bg-danger"><i class="fas fa-times-circle"></i> Error al crear el correo ya existe</span>';
+        statusEl.innerHTML =
+          '<span class="badge bg-danger"><i class="fas fa-times-circle"></i> Error al crear el correo ya existe</span>';
       }
-      
+
       try {
         await esperarSwal();
         if (typeof Swal !== 'undefined') {
@@ -92,7 +112,7 @@ if (form) {
             title: 'Error al crear usuario',
             text: res.error || 'No se pudo crear el usuario',
             confirmButtonColor: '#e74c3c',
-            confirmButtonText: 'Entendido'
+            confirmButtonText: 'Entendido',
           });
         } else {
           alert('Error: ' + (res.error || 'No se pudo crear el usuario'));
@@ -102,12 +122,13 @@ if (form) {
       }
       return;
     }
-    
+
     // ÉXITO - Mostrar notificación
     if (statusEl) {
-      statusEl.innerHTML = '<span class="badge bg-success"><i class="fas fa-check-circle"></i> Usuario creado exitosamente</span>';
+      statusEl.innerHTML =
+        '<span class="badge bg-success"><i class="fas fa-check-circle"></i> Usuario creado exitosamente</span>';
     }
-    
+
     try {
       await esperarSwal();
       if (typeof Swal !== 'undefined') {
@@ -125,7 +146,7 @@ if (form) {
           confirmButtonText: 'Ir a Lista de Usuarios',
           showCancelButton: true,
           cancelButtonText: 'Crear Otro',
-          cancelButtonColor: '#3498db'
+          cancelButtonColor: '#3498db',
         }).then((result) => {
           if (result.isConfirmed) {
             // Ir a listar usuarios
@@ -139,11 +160,18 @@ if (form) {
         });
       } else {
         // Fallback sin SweetAlert2
-        alert('✅ Usuario creado correctamente:\n\n' +
-              'Nombre: ' + body.full_name + '\n' +
-              'Email: ' + body.email + '\n' +
-              'Rol: ' + body.role_code);
-        
+        alert(
+          '✅ Usuario creado correctamente:\n\n' +
+            'Nombre: ' +
+            body.full_name +
+            '\n' +
+            'Email: ' +
+            body.email +
+            '\n' +
+            'Rol: ' +
+            body.role_code
+        );
+
         if (confirm('¿Desea ir a la lista de usuarios?')) {
           location.href = 'listarUsuarios.html';
         } else {
@@ -165,10 +193,10 @@ if (form) {
 // CARGAR USUARIOS - En listarUsuarios.html
 async function loadUsers() {
   if (statusEl) statusEl.textContent = 'Cargando usuarios...';
-  
+
   const res = await API.list();
   console.log('Lista de usuarios:', res);
-  
+
   if (!res.ok) {
     if (statusEl) statusEl.textContent = res.error || 'Error al cargar';
     if (res.error && /Token/.test(res.error)) {
@@ -176,12 +204,14 @@ async function loadUsers() {
     }
     return;
   }
-  
+
   const users = res.users || [];
   if (statusEl) {
-    statusEl.textContent = `Total: ${users.length} usuario${users.length !== 1 ? 's' : ''}`;
+    statusEl.textContent = `Total: ${users.length} usuario${
+      users.length !== 1 ? 's' : ''
+    }`;
   }
-  
+
   renderUsers(users);
 }
 
@@ -191,7 +221,7 @@ async function loadStats() {
     console.log('Cargando estadísticas...');
     const res = await API.list();
     console.log('Respuesta stats:', res);
-    
+
     if (!res.ok) {
       console.error('Error en stats:', res.error);
       if (res.error && /Token/.test(res.error)) logout();
@@ -200,7 +230,7 @@ async function loadStats() {
 
     const users = res.users || [];
     const total = users.length;
-    const active = users.filter(u => u.is_active).length;
+    const active = users.filter((u) => u.is_active).length;
     const inactive = total - active;
 
     console.log('Total:', total, 'Activos:', active, 'Inactivos:', inactive);
@@ -220,7 +250,7 @@ async function loadStats() {
 // RENDERIZAR TABLA
 function renderUsers(users) {
   if (!tblBody) return;
-  
+
   if (users.length === 0) {
     tblBody.innerHTML = `
       <tr>
@@ -233,39 +263,51 @@ function renderUsers(users) {
     `;
     return;
   }
-  
+
   tblBody.innerHTML = '';
-  users.forEach(u => {
-    const roleBadgeClass = {
-      'ADMIN': 'badge-admin',
-      'TRANSPORTISTA': 'badge-transportista',
-      'IMPORTADOR': 'badge-importador',
-      'AGENTE': 'badge-agente'
-    }[u.role_code] || 'badge-agente';
+  users.forEach((u) => {
+    const roleBadgeClass =
+      {
+        ADMIN: 'badge-admin',
+        TRANSPORTISTA: 'badge-transportista',
+        IMPORTADOR: 'badge-importador',
+        AGENTE: 'badge-agente',
+      }[u.role_code] || 'badge-agente';
 
     const statusBadgeClass = u.is_active ? 'badge-activo' : 'badge-inactivo';
     const statusText = u.is_active ? 'Activo' : 'Inactivo';
-    
+
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td><span class="user-id">${u.id}</span></td>
       <td>
-        <input class="form-control form-control-sm" value="${escapeHtml(u.full_name)}" data-k="full_name">
+        <input class="form-control form-control-sm" value="${escapeHtml(
+          u.full_name
+        )}" data-k="full_name">
       </td>
       <td>
-        <input class="form-control form-control-sm" value="${escapeHtml(u.email)}" data-k="email" type="email">
+        <input class="form-control form-control-sm" value="${escapeHtml(
+          u.email
+        )}" data-k="email" type="email">
       </td>
       <td>
         <select class="form-select form-select-sm" data-k="role_code">
-          ${['ADMIN','TRANSPORTISTA','IMPORTADOR','AGENTE'].map(rc => 
-            `<option value="${rc}" ${rc===u.role_code?'selected':''}>${rc}</option>`
-          ).join('')}
+          ${['ADMIN', 'TRANSPORTISTA', 'IMPORTADOR', 'AGENTE']
+            .map(
+              (rc) =>
+                `<option value="${rc}" ${
+                  rc === u.role_code ? 'selected' : ''
+                }>${rc}</option>`
+            )
+            .join('')}
         </select>
       </td>
       <td>
         <select class="form-select form-select-sm" data-k="is_active">
-          <option value="true" ${u.is_active?'selected':''}>Activo</option>
-          <option value="false" ${!u.is_active?'selected':''}>Inactivo</option>
+          <option value="true" ${u.is_active ? 'selected' : ''}>Activo</option>
+          <option value="false" ${
+            !u.is_active ? 'selected' : ''
+          }>Inactivo</option>
         </select>
       </td>
       <td style="text-align: center;">
@@ -284,7 +326,7 @@ if (tblBody) {
   document.addEventListener('click', async (e) => {
     const btn = e.target.closest('button[data-act]');
     if (!btn) return;
-    
+
     const id = btn.dataset.id;
     const tr = btn.closest('tr');
 
@@ -292,19 +334,19 @@ if (tblBody) {
     if (btn.dataset.act === 'save') {
       const payload = pickRow(tr);
       console.log('Actualizando usuario', id, ':', payload);
-      
+
       // Cambiar botón a estado de carga
       const btnOriginalHTML = btn.innerHTML;
       btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
       btn.disabled = true;
-      
+
       const res = await API.update(id, payload);
       console.log('Respuesta actualización:', res);
-      
+
       // Restaurar botón
       btn.innerHTML = btnOriginalHTML;
       btn.disabled = false;
-      
+
       if (!res.ok) {
         try {
           await esperarSwal();
@@ -313,7 +355,7 @@ if (tblBody) {
               icon: 'error',
               title: 'Error',
               text: res.error || 'No se pudo actualizar',
-              confirmButtonColor: '#e74c3c'
+              confirmButtonColor: '#e74c3c',
             });
           } else {
             alert('Error: ' + (res.error || 'No se pudo actualizar'));
@@ -333,7 +375,7 @@ if (tblBody) {
             title: '¡Actualizado!',
             text: 'Usuario actualizado correctamente',
             timer: 1500,
-            showConfirmButton: false
+            showConfirmButton: false,
           });
         } else {
           // Mostrar feedback visual sin alert
@@ -351,7 +393,7 @@ if (tblBody) {
       }
 
       if (statusEl) statusEl.textContent = 'Usuario actualizado correctamente';
-      
+
       // Recargar después de 1 segundo
       setTimeout(() => {
         loadUsers();
@@ -366,23 +408,29 @@ function pickRow(tr) {
     full_name: get('full_name').value.trim(),
     email: get('email').value.trim(),
     role_code: get('role_code').value,
-    is_active: get('is_active').value === 'true'
+    is_active: get('is_active').value === 'true',
   };
 }
 
-function escapeHtml(s='') {
-  return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+function escapeHtml(s = '') {
+  return String(s).replace(
+    /[&<>"']/g,
+    (m) =>
+      ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[
+        m
+      ])
+  );
 }
 
 // EJECUTAR AL CARGAR
 document.addEventListener('DOMContentLoaded', () => {
   console.log('Usuarios.js cargado');
-  
+
   // Si estamos en la tabla de usuarios
   if (tblBody) {
     loadUsers();
   }
-  
+
   // Si estamos en el dashboard
   if (document.getElementById('totalUsers')) {
     loadStats();
