@@ -5,10 +5,243 @@
   <title>Crear Usuario | SIGLAD</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="icon" href="/favicon.ico">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmABheJlHwQJLde3Dl0UUrvUlumCnC6f" crossorigin="anonymous">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link href="./css/crearUsuarios.css"rel="stylesheet">
+  <link href="./css/usuarios.css" rel="stylesheet">
+  <style>
+    /* Estilos específicos para crear usuario */
+    .form-container {
+      max-width: 700px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      padding: 40px;
+    }
+
+    .form-container h2 {
+      font-size: 24px;
+      font-weight: 700;
+      color: #2c3e50;
+      margin-bottom: 30px;
+      padding-bottom: 20px;
+      border-bottom: 2px solid #f0f0f0;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .form-container h2 i {
+      color: #3498db;
+      font-size: 28px;
+    }
+
+    .form-section {
+      margin-bottom: 30px;
+    }
+
+    .form-section-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #34495e;
+      margin-bottom: 20px;
+      padding-left: 15px;
+      border-left: 4px solid #3498db;
+    }
+
+    .form-label {
+      font-weight: 600;
+      color: #34495e;
+      font-size: 14px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .form-label i {
+      color: #7f8c8d;
+      font-size: 14px;
+    }
+
+    .form-label .required {
+      color: #e74c3c;
+      margin-left: 4px;
+    }
+
+    .form-control, .form-select {
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 12px 15px;
+      transition: all 0.3s ease;
+      font-size: 14px;
+    }
+
+    .form-control:focus, .form-select:focus {
+      border-color: #3498db;
+      box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.15);
+    }
+
+    .form-control::placeholder {
+      color: #bdc3c7;
+    }
+
+    .input-group-icon {
+      position: relative;
+    }
+
+    .input-group-icon i {
+      position: absolute;
+      left: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #7f8c8d;
+      z-index: 10;
+    }
+
+    .input-group-icon .form-control {
+      padding-left: 45px;
+    }
+
+    .btn-submit {
+      background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+      color: white;
+      border: none;
+      padding: 14px 32px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 15px;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+    }
+
+    .btn-submit:hover {
+      background: linear-gradient(135deg, #2980b9 0%, #21618c 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(52, 152, 219, 0.4);
+    }
+
+    .btn-submit:active {
+      transform: translateY(0);
+    }
+
+    .btn-cancel {
+      background: white;
+      color: #7f8c8d;
+      border: 2px solid #e0e0e0;
+      padding: 14px 32px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 15px;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+
+    .btn-cancel:hover {
+      border-color: #95a5a6;
+      color: #34495e;
+      transform: translateY(-2px);
+    }
+
+    .form-actions {
+      display: flex;
+      gap: 15px;
+      align-items: center;
+      margin-top: 30px;
+      padding-top: 30px;
+      border-top: 2px solid #f0f0f0;
+    }
+
+    #status {
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .info-card {
+      background: #e8f4fd;
+      border-left: 4px solid #3498db;
+      border-radius: 8px;
+      padding: 15px 20px;
+      margin-bottom: 25px;
+    }
+
+    .info-card i {
+      color: #3498db;
+      margin-right: 10px;
+    }
+
+    .info-card p {
+      margin: 0;
+      color: #2c3e50;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .password-hint {
+      font-size: 12px;
+      color: #7f8c8d;
+      margin-top: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .password-hint i {
+      font-size: 11px;
+    }
+
+    .role-badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .role-badge.admin {
+      background: #fee;
+      color: #e74c3c;
+    }
+
+    .role-badge.transportista {
+      background: #e3f2fd;
+      color: #3498db;
+    }
+
+    .role-badge.importador {
+      background: #f3e5f5;
+      color: #9b59b6;
+    }
+
+    .role-badge.agente {
+      background: #fff3e0;
+      color: #f39c12;
+    }
+
+    @media (max-width: 768px) {
+      .form-container {
+        padding: 25px 20px;
+      }
+
+      .form-actions {
+        flex-direction: column;
+        width: 100%;
+      }
+
+      .btn-submit, .btn-cancel {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+  </style>
 </head>
 <body>
 
@@ -16,24 +249,49 @@
   <aside class="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">SIGLAD</div>
-      <div class="sidebar-subtitle">Gestión Administrativa</div>
+      <div class="sidebar-subtitle">Gestión Logística</div>
     </div>
     <ul class="sidebar-menu">
-      <li><a href="usuarios.html"><i class="fas fa-th-large"></i> <span>Dashboard</span></a></li>
-      <li><a href="listarUsuarios.html"><i class="fas fa-users"></i> <span>Usuarios</span></a></li>
-      <li><a href="crearUsuarios.html" class="active"><i class="fas fa-user-plus"></i> <span>Crear Usuario</span></a></li>
-      <li><hr style="background: rgba(255,255,255,0.1); border: none; height: 1px; margin: 15px 0;"></li>
-      <li><a href="#" onclick="logout(); return false;"><i class="fas fa-sign-out-alt"></i> <span>Cerrar sesión</span></a></li>
+      <li>
+        <a href="usuarios.html">
+          <i class="fas fa-th-large"></i> 
+          <span>Dashboard</span>
+        </a>
+      </li>
+      <li>
+        <a href="listarUsuarios.html">
+          <i class="fas fa-users"></i> 
+          <span>Usuarios</span>
+        </a>
+      </li>
+      <li>
+        <a href="crearUsuarios.html" class="active">
+          <i class="fas fa-user-plus"></i> 
+          <span>Crear Usuario</span>
+        </a>
+      </li>
+      <li><hr></li>
+      <li>
+        <a href="#" id="btnLogout">
+          <i class="fas fa-sign-out-alt"></i> 
+          <span>Cerrar sesión</span>
+        </a>
+      </li>
     </ul>
   </aside>
 
   <!-- HEADER -->
   <header class="header">
-    <div class="header-title">Crear Usuario</div>
+    <div class="header-title">
+      Crear Nuevo Usuario
+    </div>
     <div class="header-actions">
       <div class="user-info">
-        <div class="user-avatar">A</div>
-        <span id="roleInfo">Administrador</span>
+        <div class="user-info">
+          <div class="user-avatar">A</div>
+          <span id="roleInfo">Administrador</span>
+        </div>
+      </div>
       </div>
     </div>
   </header>
@@ -41,49 +299,126 @@
   <!-- MAIN CONTENT -->
   <main class="main-content">
     <div class="form-container">
-      <h2><i class="fas fa-user-plus"></i> Nuevo Usuario</h2>
-
+      <h2>
+        <i class="fas fa-user-circle"></i>
+        Registro de Nuevo Usuario
+      </h2>
       <form id="formNew">
-        <div class="mb-3">
-          <label class="form-label">Nombre completo</label>
-          <input id="full_name" type="text" class="form-control" placeholder="Ej: Juan Pérez" required>
+        
+        <!-- Sección: Información Personal -->
+        <div class="form-section">
+          <div class="form-section-title">
+            <i class="fas fa-user"></i> Información Personal
+          </div>
+
+          <div class="mb-4">
+            <label class="form-label">
+              Nombre Completo
+              <span class="required">*</span>
+            </label>
+            <div class="input-group-icon"><i class="fa-solid fa-file-signature"></i>
+              <input 
+                id="full_name" 
+                type="text" 
+                class="form-control" 
+                placeholder="Ej: Juan Carlos Pérez López" 
+                required
+              >
+            </div>
+          </div>
+
+          <div class="mb-4">
+            <label class="form-label">
+              Correo Electrónico
+              <span class="required">*</span>
+            </label>
+            <div class="input-group-icon"><i class="fa-solid fa-at"></i>
+              <input 
+                id="email" 
+                type="email" 
+                class="form-control" 
+                placeholder="Ej: usuario@siglad.com.gt" 
+                required
+              >
+            </div>
+          </div>
         </div>
 
-        <div class="mb-3">
-          <label class="form-label">Correo electrónico</label>
-          <input id="email" type="email" class="form-control" placeholder="Ej: usuario@siglad.com.gt" required>
+        <!-- Sección: Configuración de Acceso -->
+        <div class="form-section">
+          <div class="form-section-title">
+            <i class="fas fa-cog"></i> Configuración de Acceso
+          </div>
+
+          <div class="row g-3 mb-4">
+            <div class="col-md-6">
+              <label class="form-label">
+                Rol del Usuario
+                <span class="required">*</span>
+              </label>
+              <select id="role_code" class="form-select" required>
+                <option value="" disabled selected>Seleccione un rol...</option>
+                <option value="ADMIN">Administrador</option>
+                <option value="TRANSPORTISTA">Transportista-Importador</option>
+                <option value="AGENTE">Agente</option>
+              </select>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">
+                Estado Inicial
+                <span class="required">*</span>
+              </label>
+              <select id="is_active" class="form-select" required>
+                <option value="true" selected>Activo</option>
+                <option value="false">Inactivo</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="mb-4">
+            <label class="form-label">
+              <i class="fas fa-lock"></i>
+              Contraseña
+              <span class="required">*</span>
+            </label>
+            <div class="input-group-icon">
+              <i class="fas fa-key"></i>
+              <input 
+                id="password" 
+                type="password" 
+                class="form-control" 
+                placeholder="Ingrese una contraseña segura" 
+                minlength="6"
+                required
+              >
+            </div>
+            <div class="password-hint">
+              <i class="fas fa-info-circle"></i>
+              La contraseña debe tener al menos 6 caracteres
+            </div>
+          </div>
         </div>
 
-        <div class="col-md-4">
-          <label class="form-label">Rol</label>
-          <select id="role_code" class="form-select" required>
-            <option value="ADMIN">ADMIN</option>
-            <option value="IMPORTADOR">IMPORTADOR</option>
-            <option value="AGENTE">AGENTE</option>
-            <option value="TRANSPORTISTA">TRANSPORTISTA</option>
-          </select>
-        </div>
+        <!-- Botones de acción -->
+        <div class="form-actions">
+          <button type="submit" class="btn-submit">
+            <i class="fas fa-save"></i>
+            Crear Usuario
+          </button>
+          
+          <a href="listarUsuarios.html" class="btn-cancel">
+            <i class="fas fa-times"></i>
+            Cancelar
+          </a>
 
-        <div class="col-md-2">
-          <label class="form-label">Estado</label>
-          <select id="is_active" class="form-select" required>
-            <option value="true" selected>Activo</option>
-            <option value="false">Inactivo</option>
-          </select>
+          <span id="status"></span>
         </div>
-
-        <div class="mb-3">
-          <label class="form-label">Contraseña</label>
-          <input id="password" type="password" class="form-control" placeholder="Mínimo 6 caracteres" required>
-        </div>
-
-        <button type="submit" class="btn-submit"><i class="fas fa-save"></i> Crear Usuario</button>
-        <span id="status" class="ms-3 text-muted"></span>
       </form>
     </div>
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="/js/usuarios.js" defer></script>
+  <script src="/js/usuarios.js"></script>
 </body>
 </html>

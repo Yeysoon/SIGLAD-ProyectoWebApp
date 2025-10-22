@@ -1,10 +1,10 @@
         :root {
-            --primary-purple: #7c3aed;
+            --primary-purple:#2c3e50;
             --secondary-purple: #a78bfa;
             --light-purple: #ede9fe;
-            --dark-purple: #5b21b6;
-            --gradient-start: #7c3aed;
-            --gradient-end: #a78bfa;
+            --dark-purple: #2c3e50;
+            --gradient-start: #2c3e50;
+            --gradient-end: #7561b1;
         }
 
         * {
@@ -14,7 +14,7 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: "Poppins", sans-serif;
             background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 100%);
             min-height: 100vh;
             display: flex;

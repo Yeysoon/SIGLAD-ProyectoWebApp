@@ -53,7 +53,15 @@ if (form) {
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     
-    if (statusEl) statusEl.textContent = 'Creando...';
+    // Cambiar el botón a estado de carga
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const originalBtnHTML = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creando...';
+    submitBtn.disabled = true;
+    
+    if (statusEl) {
+      statusEl.innerHTML = '<span class="badge bg-warning"><i class="fas fa-spinner fa-spin"></i> Procesando...</span>';
+    }
     
     const body = {
       full_name:  document.getElementById('full_name').value.trim(),
@@ -67,16 +75,27 @@ if (form) {
     const res = await API.create(body);
     console.log('Respuesta:', res);
     
+    // Restaurar botón
+    submitBtn.innerHTML = originalBtnHTML;
+    submitBtn.disabled = false;
+    
     if (!res.ok) {
-      if (statusEl) statusEl.textContent = res.error || 'Error al crear';
+      if (statusEl) {
+        statusEl.innerHTML = '<span class="badge bg-danger"><i class="fas fa-times-circle"></i> Error al crear el correo ya existe</span>';
+      }
+      
       try {
         await esperarSwal();
         if (typeof Swal !== 'undefined') {
           await Swal.fire({
             icon: 'error',
-            title: 'Error',
-            text: res.error || 'No se pudo crear el usuario'
+            title: 'Error al crear usuario',
+            text: res.error || 'No se pudo crear el usuario',
+            confirmButtonColor: '#e74c3c',
+            confirmButtonText: 'Entendido'
           });
+        } else {
+          alert('Error: ' + (res.error || 'No se pudo crear el usuario'));
         }
       } catch (e) {
         alert('Error: ' + (res.error || 'No se pudo crear el usuario'));
@@ -84,26 +103,62 @@ if (form) {
       return;
     }
     
+    // ÉXITO - Mostrar notificación
+    if (statusEl) {
+      statusEl.innerHTML = '<span class="badge bg-success"><i class="fas fa-check-circle"></i> Usuario creado exitosamente</span>';
+    }
+    
     try {
       await esperarSwal();
       if (typeof Swal !== 'undefined') {
         await Swal.fire({
           icon: 'success',
-          title: '¡Éxito!',
-          text: 'Usuario creado correctamente',
-          timer: 2000
+          title: '¡Usuario Creado!',
+          html: `
+            <p>El usuario <strong>${body.full_name}</strong> ha sido creado exitosamente.</p>
+            <p style="color: #7f8c8d; font-size: 14px; margin-top: 10px;">
+              <i class="fas fa-envelope"></i> ${body.email}<br>
+              <i class="fas fa-user-tag"></i> Rol: ${body.role_code}
+            </p>
+          `,
+          confirmButtonColor: '#2ecc71',
+          confirmButtonText: 'Ir a Lista de Usuarios',
+          showCancelButton: true,
+          cancelButtonText: 'Crear Otro',
+          cancelButtonColor: '#3498db'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            // Ir a listar usuarios
+            location.href = 'listarUsuarios.html';
+          } else {
+            // Limpiar formulario para crear otro
+            form.reset();
+            document.getElementById('is_active').value = 'true';
+            if (statusEl) statusEl.innerHTML = '';
+          }
         });
+      } else {
+        // Fallback sin SweetAlert2
+        alert('✅ Usuario creado correctamente:\n\n' +
+              'Nombre: ' + body.full_name + '\n' +
+              'Email: ' + body.email + '\n' +
+              'Rol: ' + body.role_code);
+        
+        if (confirm('¿Desea ir a la lista de usuarios?')) {
+          location.href = 'listarUsuarios.html';
+        } else {
+          form.reset();
+          document.getElementById('is_active').value = 'true';
+          if (statusEl) statusEl.innerHTML = '';
+        }
       }
     } catch (e) {
-      alert('Usuario creado correctamente');
+      // Si falla SweetAlert, usar alert simple
+      alert('✅ Usuario creado correctamente');
+      setTimeout(() => {
+        location.href = 'listarUsuarios.html';
+      }, 1500);
     }
-    
-    form.reset();
-    document.getElementById('is_active').value = 'true';
-    
-    setTimeout(() => {
-      location.href = 'listarUsuarios.html';
-    }, 2000);
   });
 }
 
@@ -257,7 +312,8 @@ if (tblBody) {
             await Swal.fire({
               icon: 'error',
               title: 'Error',
-              text: res.error || 'No se pudo actualizar'
+              text: res.error || 'No se pudo actualizar',
+              confirmButtonColor: '#e74c3c'
             });
           } else {
             alert('Error: ' + (res.error || 'No se pudo actualizar'));
