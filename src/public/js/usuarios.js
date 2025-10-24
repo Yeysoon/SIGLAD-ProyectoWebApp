@@ -325,7 +325,7 @@ function renderUsers(users) {
       </td>
       <td>
         <select class="form-select form-select-sm" data-k="role_code">
-          ${['ADMIN', 'TRANSPORTISTA', 'IMPORTADOR', 'AGENTE']
+          ${['ADMIN', 'TRANSPORTISTA', 'AGENTE']
             .map(
               (rc) =>
                 `<option value="${rc}" ${
