@@ -62,10 +62,10 @@ const form = document.getElementById('formNew');
 const tblBody = document.querySelector('#tblUsers tbody');
 const statusEl = document.getElementById('status');
 
-// LOGOUT
+// LOGOUT - CORRECCIÓN: usar 'click' en vez de 'onclick'
 const btnLogout = document.getElementById('btnLogout');
 if (btnLogout) {
-  btnLogout.addEventListener('click', (e) => {
+  btnLogout.addEventListener('click', (e) => {  // ✅ CORRECTO
     e.preventDefault();
     logout();
   });
