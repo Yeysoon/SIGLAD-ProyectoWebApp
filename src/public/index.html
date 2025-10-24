@@ -12,117 +12,61 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
     />
+    <!-- Animate.css -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"
+    />
     <link href="./css/index.css" rel="stylesheet" />
-    <style>
-      .alert-message {
-        margin-top: 15px;
-        padding: 12px 16px;
-        border-radius: 8px;
-        display: none;
-        animation: slideDown 0.3s ease;
-      }
-
-      .alert-message.show {
-        display: block;
-      }
-
-      .alert-message.error {
-        background-color: #f8d7da;
-        border: 1px solid #f5c6cb;
-        color: #721c24;
-      }
-
-      .alert-message.warning {
-        background-color: #fff3cd;
-        border: 1px solid #ffeaa7;
-        color: #856404;
-      }
-
-      .alert-message.success {
-        background-color: #d4edda;
-        border: 1px solid #c3e6cb;
-        color: #155724;
-      }
-
-      .alert-message i {
-        margin-right: 8px;
-        font-weight: bold;
-      }
-
-      @keyframes slideDown {
-        from {
-          opacity: 0;
-          transform: translateY(-10px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-    </style>
   </head>
   <body>
-    <div class="login-container">
-      <div class="login-card">
+    <!-- Canvas para efecto de agua -->
+    <canvas id="waterCanvas"></canvas>
+
+    <div class="login-container animate__animated animate__fadeIn">
+      <div class="login-card animate__animated animate__zoomIn animate__delay-1s">
         <div class="row g-0">
           <!-- Sección de Ilustración -->
           <div class="col-md-6 illustration-section">
-            <div class="illustration-icon">
+            <div class="illustration-icon animate__animated animate__bounceIn animate__delay-2s">
               <img
                 src="./img/Logo.png"
                 alt="Logo SIGLAD"
                 class="illustration-img"
               />
             </div>
-            <div class="illustration-text">
+            
+            <div class="illustration-text animate__animated animate__fadeInUp animate__delay-2s">
               <h2>Sistema SIGLAD</h2>
               <p>Gestión Logística Aduanera Digital</p>
-              <div class="mt-4">
-                <i
-                  class="fas fa-truck"
-                  style="
-                    font-size: 2rem;
-                    color: var(--primary-purple);
-                    margin: 0 10px;
-                    opacity: 0.6;
-                  "
-                ></i>
-                <i
-                  class="fas fa-file-invoice"
-                  style="
-                    font-size: 2rem;
-                    color: var(--primary-purple);
-                    margin: 0 10px;
-                    opacity: 0.6;
-                  "
-                ></i>
-                <i
-                  class="fas fa-check-circle"
-                  style="
-                    font-size: 2rem;
-                    color: var(--primary-purple);
-                    margin: 0 10px;
-                    opacity: 0.6;
-                  "
-                ></i>
+              
+              <div class="mt-4 icon-container">
+                <i class="fas fa-ship icon-animated animate__animated animate__fadeInLeft animate__delay-3s"></i>
+                <i class="fas fa-file-invoice icon-animated animate__animated animate__fadeInUp animate__delay-3s"></i>
+                <i class="fas fa-truck icon-animated animate__animated animate__fadeInRight animate__delay-3s"></i>
               </div>
             </div>
           </div>
 
           <!-- Sección de Formulario -->
           <div class="col-md-6 form-section">
-            <div class="logo-area">
+            <div class="logo-area animate__animated animate__fadeInDown animate__delay-1s">
               <div class="logo-icon">
                 <i class="fas fa-lock"></i>
               </div>
             </div>
 
-            <h1>Inicio de Sesión</h1>
-            <p class="subtitle">Ingresa tus credenciales para continuar</p>
+            <h1 class="animate__animated animate__fadeInDown animate__delay-1s">Inicio de Sesión</h1>
+            <p class="subtitle animate__animated animate__fadeInDown animate__delay-1s">
+              Ingresa tus credenciales para continuar
+            </p>
 
             <form id="form">
-              <div class="form-group">
-                <label class="form-label">Correo Electrónico</label>
+              <!-- Email Input -->
+              <div class="form-group animate__animated animate__fadeInLeft animate__delay-2s">
+                <label class="form-label">
+                  <i class="fas fa-envelope"></i> Correo Electrónico
+                </label>
                 <div class="input-icon-wrapper">
                   <i class="fas fa-envelope input-icon"></i>
                   <input
@@ -136,8 +80,11 @@
                 </div>
               </div>
 
-              <div class="form-group">
-                <label class="form-label">Contraseña</label>
+              <!-- Password Input -->
+              <div class="form-group animate__animated animate__fadeInRight animate__delay-2s">
+                <label class="form-label">
+                  <i class="fas fa-lock"></i> Contraseña
+                </label>
                 <div class="input-icon-wrapper">
                   <i class="fas fa-lock input-icon"></i>
                   <input
@@ -151,33 +98,25 @@
                 </div>
               </div>
 
-              <button id="btn" type="submit" class="btn-login">
+              <!-- Botón de login -->
+              <button 
+                id="btn" 
+                type="submit" 
+                class="btn-login animate__animated animate__fadeInUp animate__delay-2s"
+              >
                 <span id="btnText">Iniciar Sesión</span>
               </button>
 
-              <!-- ALERTA DE VALIDACIÓN EN EL HTML -->
+              <!-- Mensaje de alerta -->
               <div id="msg" class="alert-message"></div>
-              <!-- ...existing code... -->
-              <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-              <!-- usar el bundle que expone la variable global "Swal" -->
-              <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
-              <script src="js/index.js"></script>
-              <!-- ...existing code... -->
             </form>
           </div>
         </div>
       </div>
     </div>
 
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
-      rel="stylesheet"
-    />
-
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="./vendor/sweetalert2.all.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
     <script src="js/index.js"></script>
   </body>
 </html>
