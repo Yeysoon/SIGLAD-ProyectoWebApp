@@ -11,7 +11,7 @@
 
     /* SIDEBAR */
     .sidebar {
-      background: #2c3e50;
+      background: #061729;
       min-height: 100vh;
       padding: 20px 0;
       position: fixed;
@@ -96,7 +96,7 @@
     .header-title {
       font-size: 24px;
       font-weight: 700;
-      color: #2c3e50;
+      color: #061729;
     }
 
     .header-actions {
@@ -109,7 +109,7 @@
       display: flex;
       align-items: center;
       gap: 10px;
-      color: #34495e;
+      color: #061729;
       font-size: 14px;
     }
 
@@ -172,7 +172,7 @@
     .stat-number {
       font-size: 32px;
       font-weight: 700;
-      color: #2c3e50;
+      color: #061729;
       margin-bottom: 8px;
     }
 
@@ -202,7 +202,7 @@
     .quick-actions h3 {
       font-size: 18px;
       font-weight: 700;
-      color: #2c3e50;
+      color: #061729;
       margin-bottom: 20px;
     }
 
