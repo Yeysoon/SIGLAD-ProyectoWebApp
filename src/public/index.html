@@ -12,58 +12,62 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
     />
-    <!-- Animate.css -->
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"
-    />
     <link href="./css/index.css" rel="stylesheet" />
   </head>
   <body>
     <!-- Canvas para efecto de agua -->
     <canvas id="waterCanvas"></canvas>
 
-    <div class="login-container animate__animated animate__fadeIn">
-      <div class="login-card animate__animated animate__zoomIn animate__delay-1s">
+    <!-- Iconos flotantes temáticos de aduana -->
+    <div class="floating-icons">
+      <i class="fas fa-ship floating-icon"></i>
+      <i class="fas fa-anchor floating-icon"></i>
+      <i class="fas fa-boxes-stacked floating-icon"></i>
+      <i class="fas fa-truck floating-icon"></i>
+      <i class="fas fa-file-invoice floating-icon"></i>
+    </div>
+
+    <div class="login-container">
+      <div class="login-card">
         <div class="row g-0">
           <!-- Sección de Ilustración -->
           <div class="col-md-6 illustration-section">
-            <div class="illustration-icon animate__animated animate__bounceIn animate__delay-2s">
+            <div class="illustration-icon">
               <img
-                src="./img/Logo.png"
+                src="./img/LogoWhite.png"
                 alt="Logo SIGLAD"
                 class="illustration-img"
               />
             </div>
             
-            <div class="illustration-text animate__animated animate__fadeInUp animate__delay-2s">
+            <div class="illustration-text">
               <h2>Sistema SIGLAD</h2>
               <p>Gestión Logística Aduanera Digital</p>
               
               <div class="mt-4 icon-container">
-                <i class="fas fa-ship icon-animated animate__animated animate__fadeInLeft animate__delay-3s"></i>
-                <i class="fas fa-file-invoice icon-animated animate__animated animate__fadeInUp animate__delay-3s"></i>
-                <i class="fas fa-truck icon-animated animate__animated animate__fadeInRight animate__delay-3s"></i>
+                <i class="fas fa-ship icon-animated"></i>
+                <i class="fas fa-file-invoice icon-animated"></i>
+                <i class="fas fa-truck icon-animated"></i>
               </div>
             </div>
           </div>
 
           <!-- Sección de Formulario -->
           <div class="col-md-6 form-section">
-            <div class="logo-area animate__animated animate__fadeInDown animate__delay-1s">
+            <div class="logo-area">
               <div class="logo-icon">
                 <i class="fas fa-lock"></i>
               </div>
             </div>
 
-            <h1 class="animate__animated animate__fadeInDown animate__delay-1s">Inicio de Sesión</h1>
-            <p class="subtitle animate__animated animate__fadeInDown animate__delay-1s">
+            <h1>Inicio de Sesión</h1>
+            <p class="subtitle">
               Ingresa tus credenciales para continuar
             </p>
 
             <form id="form">
               <!-- Email Input -->
-              <div class="form-group animate__animated animate__fadeInLeft animate__delay-2s">
+              <div class="form-group">
                 <label class="form-label">
                   <i class="fas fa-envelope"></i> Correo Electrónico
                 </label>
@@ -81,7 +85,7 @@
               </div>
 
               <!-- Password Input -->
-              <div class="form-group animate__animated animate__fadeInRight animate__delay-2s">
+              <div class="form-group">
                 <label class="form-label">
                   <i class="fas fa-lock"></i> Contraseña
                 </label>
@@ -99,11 +103,7 @@
               </div>
 
               <!-- Botón de login -->
-              <button 
-                id="btn" 
-                type="submit" 
-                class="btn-login animate__animated animate__fadeInUp animate__delay-2s"
-              >
+              <button id="btn" type="submit" class="btn-login">
                 <span id="btnText">Iniciar Sesión</span>
               </button>
 

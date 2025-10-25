@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const btn = document.getElementById('btn');
   const btnText = document.getElementById('btnText');
 
-  // Mapeo de roles a la página de inicio
+  // Mapeo de roles
   const roleRedirectMap = {
     ADMIN: '/usuarios.html',
     TRANSPORTISTA: '/dashboardDuca.html',
@@ -14,61 +14,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const defaultPage = '/usuarios.html';
 
-  // ========== INICIAR EFECTO DE AGUA REALISTA ==========
+  // ========== INICIAR EFECTO DE AGUA ==========
   initWaterEffect();
 
-  // ========== ANIMACIONES EN INPUTS ==========
-  const emailInput = document.getElementById('email');
-  const passwordInput = document.getElementById('password');
-
-  if (emailInput) {
-    emailInput.addEventListener('focus', function() {
-      const wrapper = this.closest('.form-group');
-      if (wrapper) {
-        wrapper.classList.add('animate__animated', 'animate__pulse');
-        setTimeout(() => {
-          wrapper.classList.remove('animate__animated', 'animate__pulse');
-        }, 1000);
-      }
-    });
-  }
-
-  if (passwordInput) {
-    passwordInput.addEventListener('focus', function() {
-      const wrapper = this.closest('.form-group');
-      if (wrapper) {
-        wrapper.classList.add('animate__animated', 'animate__pulse');
-        setTimeout(() => {
-          wrapper.classList.remove('animate__animated', 'animate__pulse');
-        }, 1000);
-      }
-    });
-  }
-
-  // ========== TU LÓGICA ORIGINAL DE LOGIN (SIN MODIFICAR) ==========
+  // ========== LÓGICA DE LOGIN (SIN CAMBIOS) ==========
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
 
-    // Limpiar mensaje anterior
     limpiarMensaje();
 
-    // Desabilitar botón
     btn.disabled = true;
     btnText.textContent = 'Procesando...';
 
     const email = document.getElementById('email').value.trim();
     const password = document.getElementById('password').value;
 
-    // Validaciones básicas
     if (!email || !password) {
-      // Animación de error en campos vacíos
-      if (!email && emailInput) {
-        emailInput.classList.add('animate__animated', 'animate__shakeX');
-        setTimeout(() => emailInput.classList.remove('animate__animated', 'animate__shakeX'), 1000);
+      if (!email) {
+        document.getElementById('email').classList.add('error');
+        setTimeout(() => document.getElementById('email').classList.remove('error'), 1000);
       }
-      if (!password && passwordInput) {
-        passwordInput.classList.add('animate__animated', 'animate__shakeX');
-        setTimeout(() => passwordInput.classList.remove('animate__animated', 'animate__shakeX'), 1000);
+      if (!password) {
+        document.getElementById('password').classList.add('error');
+        setTimeout(() => document.getElementById('password').classList.remove('error'), 1000);
       }
       
       mostrarMensaje('Por favor completa todos los campos', 'warning');
@@ -87,90 +55,53 @@ document.addEventListener('DOMContentLoaded', () => {
       });
 
       const data = await res.json();
-      console.log('Respuesta login:', {
-        status: res.status,
-        ok: data.ok,
-        error: data.error,
-      });
+      console.log('Respuesta login:', { status: res.status, ok: data.ok, error: data.error });
 
-      // [FA02] Usuario inactivo - Status 403
       if (res.status === 403) {
-        form.classList.add('animate__animated', 'animate__shakeX');
-        setTimeout(() => form.classList.remove('animate__animated', 'animate__shakeX'), 1000);
-        
-        mostrarMensaje(
-          'Usuario deshabilitado. Contacta al administrador.',
-          'error'
-        );
+        mostrarMensaje('Usuario deshabilitado. Contacta al administrador.', 'error');
         btn.disabled = false;
         btnText.textContent = 'Iniciar Sesión';
         return;
       }
 
-      // [FA01] Credenciales inválidas - Status 401
       if (res.status === 401) {
-        form.classList.add('animate__animated', 'animate__shakeX');
-        setTimeout(() => form.classList.remove('animate__animated', 'animate__shakeX'), 1000);
-        
         mostrarMensaje('Usuario o contraseña incorrecta', 'warning');
         btn.disabled = false;
         btnText.textContent = 'Iniciar Sesión';
         return;
       }
 
-      // Status 400 - Validar el mensaje
       if (res.status === 400) {
-        form.classList.add('animate__animated', 'animate__shakeX');
-        setTimeout(() => form.classList.remove('animate__animated', 'animate__shakeX'), 1000);
-        
         const mensajeError = data.error || 'Credenciales inválidas';
-
-        // Si contiene "inactivo" o "deshabilitado" → es inactivo
-        if (
-          mensajeError.toLowerCase().includes('inactivo') ||
-          mensajeError.toLowerCase().includes('deshabilitado')
-        ) {
-          mostrarMensaje(mensajeError, 'error');
-        } else {
-          mostrarMensaje(mensajeError, 'warning');
-        }
-
+        const tipo = mensajeError.toLowerCase().includes('inactivo') || 
+                     mensajeError.toLowerCase().includes('deshabilitado') ? 'error' : 'warning';
+        mostrarMensaje(mensajeError, tipo);
         btn.disabled = false;
         btnText.textContent = 'Iniciar Sesión';
         return;
       }
 
-      // Otros errores
       if (!res.ok || !data.ok) {
-        form.classList.add('animate__animated', 'animate__shakeX');
-        setTimeout(() => form.classList.remove('animate__animated', 'animate__shakeX'), 1000);
-        
         const errorMsg = data?.error || 'Usuario o contraseña incorrecta';
         mostrarMensaje(errorMsg, 'warning');
-
         btn.disabled = false;
         btnText.textContent = 'Iniciar Sesión';
         return;
       }
 
-      // Validar que el usuario tenga rol
       if (!data.user || !data.user.role) {
         mostrarMensaje('Error: Tu usuario no tiene rol asignado', 'error');
-
         btn.disabled = false;
         btnText.textContent = 'Iniciar Sesión';
         return;
       }
 
-      // Login exitoso
       console.log('Login exitoso:', data.user);
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
 
-      // Mostrar mensaje de éxito EN EL HTML
       mostrarMensaje(`¡Bienvenido ${data.user.full_name}!`, 'success');
 
-      // Redirigir después de 1.5 segundos
       setTimeout(() => {
         const role = data.user.role;
         const redirectURL = roleRedirectMap[role] || defaultPage;
@@ -180,33 +111,28 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (err) {
       console.error('Error de conexión:', err);
       mostrarMensaje('No se pudo conectar. Intenta de nuevo.', 'error');
-
       btn.disabled = false;
       btnText.textContent = 'Iniciar Sesión';
     }
   });
 
-  // Función para mostrar mensaje en el HTML (CON ANIMACIONES)
   function mostrarMensaje(texto, tipo = 'warning') {
     msg.innerHTML = '';
-    msg.classList.remove('show', 'error', 'warning', 'success', 'animate__animated', 'animate__bounceIn');
+    msg.classList.remove('show', 'error', 'warning', 'success');
 
     let icono = 'fas fa-exclamation-triangle';
     if (tipo === 'error') icono = 'fas fa-times-circle';
     if (tipo === 'success') icono = 'fas fa-check-circle';
-    if (tipo === 'warning') icono = 'fas fa-exclamation-triangle';
 
     msg.innerHTML = `<i class="${icono}"></i> ${texto}`;
-    msg.classList.add(tipo, 'show', 'animate__animated', 'animate__bounceIn');
+    msg.classList.add(tipo, 'show');
   }
 
-  // Función para limpiar mensaje
   function limpiarMensaje() {
     msg.innerHTML = '';
-    msg.classList.remove('show', 'error', 'warning', 'success', 'animate__animated', 'animate__bounceIn');
+    msg.classList.remove('show', 'error', 'warning', 'success');
   }
 
-  // Permitir presionar Enter en los inputs
   document.getElementById('email').addEventListener('keypress', (e) => {
     if (e.key === 'Enter') form.dispatchEvent(new Event('submit'));
   });
@@ -215,18 +141,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if (e.key === 'Enter') form.dispatchEvent(new Event('submit'));
   });
 
-  // ========== EFECTO DE AGUA REALISTA CON CANVAS ==========
+  // ========== EFECTO DE AGUA REALISTA (AZUL MARINO OSCURO) ==========
   function initWaterEffect() {
     const canvas = document.getElementById('waterCanvas');
     if (!canvas) return;
 
     const ctx = canvas.getContext('2d');
-    let particles = [];
-    let waves = [];
-    let mouseX = 0;
-    let mouseY = 0;
-
-    // Ajustar tamaño del canvas
+    let time = 0;
+    
     function resizeCanvas() {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
@@ -234,125 +156,99 @@ document.addEventListener('DOMContentLoaded', () => {
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
 
-    // Seguimiento del mouse para efecto parallax
-    document.addEventListener('mousemove', (e) => {
-      mouseX = e.clientX;
-      mouseY = e.clientY;
-    });
-
-    // Clase para partículas de espuma
-    class Particle {
-      constructor() {
-        this.x = Math.random() * canvas.width;
-        this.y = Math.random() * canvas.height;
-        this.size = Math.random() * 3 + 1;
-        this.speedY = Math.random() * 0.5 + 0.2;
-        this.opacity = Math.random() * 0.5 + 0.3;
-      }
-
-      update() {
-        this.y -= this.speedY;
-        if (this.y < -10) {
-          this.y = canvas.height + 10;
-          this.x = Math.random() * canvas.width;
-        }
-      }
-
-      draw() {
-        ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-        ctx.fill();
-      }
+    // Partículas de espuma
+    const foamParticles = [];
+    for (let i = 0; i < 150; i++) {
+      foamParticles.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        size: Math.random() * 2.5 + 0.5,
+        speedX: (Math.random() - 0.5) * 0.4,
+        speedY: (Math.random() - 0.5) * 0.4,
+        opacity: Math.random() * 0.5 + 0.2
+      });
     }
 
-    // Clase para olas
-    class Wave {
-      constructor(y, amplitude, frequency, speed) {
-        this.y = y;
-        this.amplitude = amplitude;
-        this.frequency = frequency;
-        this.speed = speed;
-        this.offset = 0;
-      }
-
-      update() {
-        this.offset += this.speed;
-      }
-
-      draw() {
-        ctx.beginPath();
-        ctx.moveTo(0, this.y);
-
-        for (let x = 0; x < canvas.width; x++) {
-          const y = this.y + Math.sin((x * this.frequency) + this.offset) * this.amplitude;
-          ctx.lineTo(x, y);
-        }
-
-        ctx.lineTo(canvas.width, canvas.height);
-        ctx.lineTo(0, canvas.height);
-        ctx.closePath();
-
-        const gradient = ctx.createLinearGradient(0, this.y - 50, 0, canvas.height);
-        gradient.addColorStop(0, 'rgba(14, 59, 102, 0.6)');
-        gradient.addColorStop(0.5, 'rgba(10, 25, 41, 0.8)');
-        gradient.addColorStop(1, 'rgba(10, 25, 41, 1)');
-
-        ctx.fillStyle = gradient;
-        ctx.fill();
-
-        // Línea de espuma en la cresta
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-      }
-    }
-
-    // Crear partículas
-    for (let i = 0; i < 50; i++) {
-      particles.push(new Particle());
-    }
-
-    // Crear olas
-    waves.push(new Wave(canvas.height * 0.7, 20, 0.01, 0.02));
-    waves.push(new Wave(canvas.height * 0.75, 15, 0.015, -0.015));
-    waves.push(new Wave(canvas.height * 0.8, 25, 0.008, 0.01));
-
-    // Dibujar fondo degradado
-    function drawBackground() {
+    function drawWater() {
+      // Fondo azul marino oscuro con gradiente
       const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-      
-      // Efecto parallax sutil basado en la posición del mouse
-      const parallaxX = (mouseX / window.innerWidth - 0.5) * 20;
-      const parallaxY = (mouseY / window.innerHeight - 0.5) * 20;
-      
-      gradient.addColorStop(0, `rgb(${15 + parallaxX}, ${23 + parallaxY}, 41)`);
-      gradient.addColorStop(0.5, `rgb(${30 + parallaxX}, ${58 + parallaxY}, 102)`);
-      gradient.addColorStop(1, `rgb(${12 + parallaxX}, ${74 + parallaxY}, 110)`);
+      gradient.addColorStop(0, '#051627');    // Muy oscuro
+      gradient.addColorStop(0.4, '#0a2540');  // Oscuro
+      gradient.addColorStop(0.7, '#0d3b66');  // Medio
+      gradient.addColorStop(1, '#0a1520');    // Muy oscuro abajo
       
       ctx.fillStyle = gradient;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
-    }
 
-    // Animar
-    function animate() {
-      drawBackground();
+      // Ondulaciones del agua
+      ctx.save();
+      for (let i = 0; i < 3; i++) {
+        ctx.beginPath();
+        ctx.moveTo(0, canvas.height * 0.5);
+        
+        for (let x = 0; x <= canvas.width; x += 5) {
+          const y = canvas.height * 0.5 + 
+                    Math.sin(x * 0.005 + time * 0.03 + i) * 20 +
+                    Math.sin(x * 0.008 + time * 0.02 + i * 2) * 15;
+          ctx.lineTo(x, y);
+        }
+        
+        ctx.lineTo(canvas.width, canvas.height);
+        ctx.lineTo(0, canvas.height);
+        ctx.closePath();
+        
+        const waveGradient = ctx.createLinearGradient(0, canvas.height * 0.4, 0, canvas.height);
+        waveGradient.addColorStop(0, `rgba(255, 255, 255, ${0.03 - i * 0.01})`);
+        waveGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+        
+        ctx.fillStyle = waveGradient;
+        ctx.fill();
+      }
+      ctx.restore();
 
-      // Actualizar y dibujar olas
-      waves.forEach(wave => {
-        wave.update();
-        wave.draw();
+      // Dibujar espuma (más realista)
+      foamParticles.forEach(particle => {
+        particle.x += particle.speedX;
+        particle.y += particle.speedY;
+
+        // Rebote suave
+        if (particle.x < 0 || particle.x > canvas.width) particle.speedX *= -0.8;
+        if (particle.y < 0 || particle.y > canvas.height) particle.speedY *= -0.8;
+
+        // Mantener dentro del canvas
+        particle.x = Math.max(0, Math.min(canvas.width, particle.x));
+        particle.y = Math.max(0, Math.min(canvas.height, particle.y));
+
+        // Dibujar partícula de espuma
+        ctx.beginPath();
+        ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255, 255, 255, ${particle.opacity})`;
+        ctx.shadowBlur = 3;
+        ctx.shadowColor = 'rgba(255, 255, 255, 0.5)';
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        // Añadir líneas de espuma conectadas
+        if (Math.random() > 0.98) {
+          const nearbyParticles = foamParticles.filter(p => 
+            Math.hypot(p.x - particle.x, p.y - particle.y) < 50
+          );
+          
+          nearbyParticles.slice(0, 2).forEach(nearby => {
+            ctx.beginPath();
+            ctx.moveTo(particle.x, particle.y);
+            ctx.lineTo(nearby.x, nearby.y);
+            ctx.strokeStyle = `rgba(255, 255, 255, ${particle.opacity * 0.3})`;
+            ctx.lineWidth = 0.5;
+            ctx.stroke();
+          });
+        }
       });
 
-      // Actualizar y dibujar partículas
-      particles.forEach(particle => {
-        particle.update();
-        particle.draw();
-      });
-
-      requestAnimationFrame(animate);
+      time++;
+      requestAnimationFrame(drawWater);
     }
 
-    animate();
+    drawWater();
   }
 });
