@@ -2,14 +2,21 @@
   "name": "pg-render-demo",
   "version": "1.0.0",
   "description": "Mini proyecto para probar conexión a PostgreSQL en Render",
+  "homepage": "https://github.com/Yeysoon/SIGLAD-ProyectoWebApp#readme",
+  "bugs": {
+    "url": "https://github.com/Yeysoon/SIGLAD-ProyectoWebApp/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Yeysoon/SIGLAD-ProyectoWebApp.git"
+  },
+  "license": "ISC",
+  "author": "",
   "type": "module",
   "main": "src/server.js",
   "scripts": {
     "dev": "node --watch src/server.js",
     "start": "node src/server.js"
-  },
-  "engines": {
-    "node": ">=20.x"
   },
   "dependencies": {
     "animate.css": "^4.1.1",
@@ -19,5 +26,9 @@
     "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.0",
     "pg": "^8.12.0"
+  },
+  "devDependencies": {},
+  "engines": {
+    "node": ">=20.x"
   }
 }
